@@ -345,3 +345,5 @@ title('Diurnal cycle')
 xlabel('Time of day (hours)')
 ylabel('Flux (W m^{-2})')
 legend('R_n','H','\lambdaE','G','g_{ac}*100','Location','northwest')
+
+grid on;
