@@ -1,0 +1,136 @@
+```{julia}
+const cwat = 4188               # Specific heat of water (J/kg/K)
+const cice = 2117.27            # Specific heat ice (J/kg/K)
+
+const rho_wat = 1000            # Density of water (kg/m3)
+const rho_ice = 917             # Density of ice (kg/m3)
+
+const cvwat = cwat * rho_wat    # Heat capacity of water (J/m3/K)
+const cvice = cice * rho_ice    # Heat capacity of ice (J/m3/K)
+const cvsol = 1.926e06          # Heat capacity of soil solids (J/m3/K)
+
+const k_wat = 0.57              # Thermal conductivity of water (W/m/K)
+const k_ice = 2.29              # Thermal conductivity of ice (W/m/K)
+const tk_quartz = 7.7           # Thermal conductivity of quartz (W/m/K)
+
+# Soil texture classes (Cosby et al. 1984. Water Resources Research 20:682-690)
+#  1: sand
+#  2: loamy sand
+#  3: sandy loam
+#  4: silty loam
+#  5: loam
+#  6: sandy clay loam
+#  7  silty clay loam
+#  8: clay loam
+#  9: sandy clay
+# 10: silty clay
+# 11: clay
+const silt = [5, 12, 32, 70, 39, 15, 56, 34, 6, 47, 20]       # Percent silt
+const sand = [92, 82, 58, 17, 43, 58, 10, 32, 52, 6, 22]       # Percent sand
+const clay = [3, 6, 10, 13, 18, 27, 34, 34, 42, 47, 58]       # Percent clay
+
+# Volumetric soil water content at saturation (porosity)
+# (Clapp and Hornberger. 1978. Water Resources Research 14:601-604)
+const watsat = [0.395, 0.410, 0.435, 0.485, 0.451, 0.420, 0.477, 0.476, 0.426, 0.492, 0.482]
+
+# Define 5 soil types to process
+const soiltyp = [1, 3, 5, 8, 11]
+
+# Set relative soil water content (s) from 0 to 1
+# Loop through each soil type
+```
+```{julia}
+ρ_b(Θ_sat) = 2700.0 * (1 - Θ_sat)
+
+κ_dry(ρ_b) = (0.135 * ρ_b + 64.7) / (2700 - 0.947 * ρ_b)
+
+κ_e(sand, sm) = sand < 50.0 ? log10(max(sm, 0.1)) + 1 : 0.7 * log10(max(sm, 0.05)) + 1
+
+# thermal conductivity of soil solids
+κ_q = 7.7 # Thermal conductivity of quartz (W/m/K)
+
+function κ_solid(q)
+  κ0 = q > 0.2 ? 2.0 : 3.0
+  (κ_q)^q * κ0^(1 - q) # Eq. 5.31
+end
+
+
+inc = 0.05                             # increment
+n = Int((1 - 0) / inc + 1)                  # number of values
+sm = range(0, 1, length=n)              # n evenly spaced values between 0 and 1 (inclusive)
+
+# k: 土壤类型的编号
+function cal_soil_param(k, sm)
+  Θ_sat = watsat[k]
+  n = length(sm)
+  tk = zeros(n)
+  cv = zeros(n)
+
+  for j in 1:length(sm)
+    θ = sm[j] * Θ_sat # Volumetric water content
+
+    # Dry thermal conductivity (W/m/K) from bulk density (kg/m3)
+    ρb = ρ_b(Θ_sat)
+    tkdry = κ_dry(ρb)
+
+    # Soil solids thermal conducitivty (W/m/K) from quartz fraction
+    # tko = thermal conductivity of other minerals (W/m/K)
+    quartz = sand[k] / 100
+    k_sol = κ_solid(quartz)
+
+    # Unfrozen and frozen saturated thermal conductivity (W/m/K)
+    tksat_u = (k_sol^(1 - Θ_sat)) * (k_wat^Θ_sat)
+    tksat_f = (k_sol^(1 - Θ_sat)) * (k_ice^Θ_sat)
+
+    # Unfrozen and frozen Kersten number
+    ke_u = κ_e(sand[k], sm[j])
+    ke_f = sm[j]
+
+    # Unfrozen and frozen thermal conductivity (W/m/K)
+    tku = (tksat_u - tkdry) * ke_u + tkdry
+    tkf = (tksat_f - tkdry) * ke_f + tkdry
+
+    # Unfrozen and frozen heat capacity (J/m3/K)
+    cvu = (1 - Θ_sat) * cvsol + cvwat * θ
+    cvf = (1 - Θ_sat) * cvsol + cvice * θ
+
+    # Save values for each texture type
+    tk[j], cv[j] = tku, cvu * 1e-06
+  end      # end soil water loop j
+  tk, cv
+end
+
+tk1, cv1 = cal_soil_param(soiltyp[1], sm)
+tk2, cv2 = cal_soil_param(soiltyp[2], sm)
+tk3, cv3 = cal_soil_param(soiltyp[3], sm)
+tk4, cv4 = cal_soil_param(soiltyp[4], sm)
+tk5, cv5 = cal_soil_param(soiltyp[5], sm)
+```
+
+# Make graph
+```{julia}
+using Plots
+using LaTeXStrings
+
+plot(s,tk1,label="sand", frame=:box)
+plot!(s,tk2,label="sandy loam")
+plot!(s,tk3,label="loam")
+plot!(s,tk4,label="clay loam")
+plot!(s,tk5,label="clay")
+
+title!("Thermal conductivity")
+xlabel!("Relative soil moisture")
+ylabel!(L"Thermal conductivity ($W m^{-1} K^{-1}$)")
+```
+
+```{julia}
+plot(s,cv1,label="sand", frame=:box)
+plot!(s,cv2,label="sandy loam")
+plot!(s,cv3,label="loam")
+plot!(s,cv4,label="clay loam")
+plot!(s,cv5,label="clay")
+
+title!("Volumetric heat capacity")
+xlabel!("Relative soil moisture")
+ylabel!(L"Volumetric heat capacity ($W J m^{–3} K^{–1}$)")
+```

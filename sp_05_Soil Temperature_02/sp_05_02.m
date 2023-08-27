@@ -56,52 +56,42 @@ soilvar.method = 'excess-heat';    % Use excess heat for phase change
 %soilvar.method = 'apparent-heat-capacity'; % Use apparent heat capacity for phase change
 
 % --- Initialize soil layer variables
-
 % Number of layers in soil profile
-
 soilvar.nsoi = 120;
 
 % Soil layer thickness (m)
-
 for i = 1:soilvar.nsoi
    soilvar.dz(i) = 0.025;
 end
 
 % Soil depth (m) at i+1/2 interface between layers i and i+1 (negative distance from surface)
-
 soilvar.z_plus_onehalf(1) = -soilvar.dz(1);
 for i = 2:soilvar.nsoi
    soilvar.z_plus_onehalf(i) = soilvar.z_plus_onehalf(i-1) - soilvar.dz(i);
 end
 
 % Soil depth (m) at center of layer i (negative distance from surface)
-
 soilvar.z(1) = 0.5 * soilvar.z_plus_onehalf(1);
 for i = 2:soilvar.nsoi
    soilvar.z(i) = 0.5 * (soilvar.z_plus_onehalf(i-1) + soilvar.z_plus_onehalf(i));
 end
 
 % Thickness between between z(i) and z(i+1)
-
 for i = 1:soilvar.nsoi-1
    soilvar.dz_plus_onehalf(i) = soilvar.z(i) - soilvar.z(i+1);
 end
 soilvar.dz_plus_onehalf(soilvar.nsoi) = 0.5 * soilvar.dz(soilvar.nsoi);
 
 % Initial soil temperature (K) and unfrozen and frozen water (kg H2O/m2)
-
 for i = 1:soilvar.nsoi
 
    % Temperature (K)
-
    soilvar.tsoi(i) = physcon.tfrz + 2.0;
 
    % Soil water at saturation (kg H2O/m2)
-
    h2osoi_sat = soilvar.watsat(soilvar.soil_texture) * physcon.rhowat * soilvar.dz(i);
 
    % Actual water content is some fraction of saturation
-
    if (soilvar.tsoi(i) > physcon.tfrz)
       soilvar.h2osoi_ice(i) = 0;
       soilvar.h2osoi_liq(i) = 0.8 * h2osoi_sat;
@@ -109,13 +99,10 @@ for i = 1:soilvar.nsoi
       soilvar.h2osoi_liq(i) = 0;
       soilvar.h2osoi_ice(i) = 0.8 * h2osoi_sat;
    end
-
 end
 
 % --- Time stepping loop to increment soil temperature
-
 % Counter for output file
-
 m = 0;
 
 % Main loop is NTIM iterations per day with a time step of DT seconds.
@@ -127,7 +114,6 @@ for iday = 1:nday
    for itim = 1:ntim
 
       % Hour of day
-
       hour = itim * (dt/86400 * 24);
 
       % Surface temperature: Constant value TMEAN if TRANGE = 0. Otherwise, use a sine
@@ -136,19 +122,15 @@ for iday = 1:nday
       tsurf = tmean + 0.5 * trange * sin(2*pi/24 * (hour-8.0));
 
      % Thermal conductivity and heat capacity
-
       [soilvar] = soil_thermal_properties (physcon, soilvar);
 
       % Soil temperatures
-
       [soilvar] = soil_temperature (physcon, soilvar, tsurf, dt);
 
       % Save hourly soil temperature profile for last day
-
       if (iday == nday)
 
          % Surface output
-
          % Vector format - to write to data file
          m = m + 1;
          hour_vec(m) = hour;
@@ -161,7 +143,6 @@ for iday = 1:nday
          tsoi_out(1,itim) = tsurf - physcon.tfrz; % deg C
 
          % Soil layers for top 100 cm
-
          for i = 1:soilvar.nsoi
             if (soilvar.z(i) > -1.0)
                m = m + 1;
@@ -180,7 +161,6 @@ for iday = 1:nday
 end
 
 % --- Write output file
-
 A = [hour_vec; z_vec; tsoi_vec];
 fileID = fopen('data.txt','w');
 fprintf(fileID,'%12s %12s %12s\n','hour','z','tsoi');
@@ -188,7 +168,6 @@ fprintf(fileID,'%12.3f %12.3f %12.3f\n', A);
 fclose(fileID);
 
 % --- Make contour plot
-
 contour(hour_out,z_out,tsoi_out,'ShowText','on')
 title('Soil Temperature (^oC)')
 xlabel('Time of day (hours)')

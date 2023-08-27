@@ -19,7 +19,6 @@ tkice = 2.29;              % Thermal conductivity of ice (W/m/K)
 tk_quartz = 7.7;           % Thermal conductivity of quartz (W/m/K)
 
 % Soil texture classes (Cosby et al. 1984. Water Resources Research 20:682-690)
-
 %  1: sand
 %  2: loamy sand
 %  3: sandy loam
@@ -54,21 +53,16 @@ s = linspace(0,1,n);                    % n evenly spaced values between 0 and 1
 % Loop through each soil type
 
 for i = 1:length(soiltyp)
-
    % Soil texture to process
-
    k = soiltyp(i);
 
    % Thermal conductivity and heat capacity for each soil moisture
-
    for j = 1:length(s)
 
       % Volumetric water content
-
       h2osoi = s(j) * watsat(k);
 
       % Dry thermal conductivity (W/m/K) from bulk density (kg/m3)
-
       bd = 2700 * (1 - watsat(k));
       tkdry = (0.135 * bd + 64.7) / (2700 - 0.947 * bd);
 
@@ -137,6 +131,14 @@ xlabel('Relative soil moisture')
 ylabel('Thermal conductivity (W m^{-1} K^{-1})')
 legend('sand','sandy loam','loam','clay loam','clay','Location','best')
 
+
+figure
+plot(s,cv1,'r-',s,cv2,'g-',s,cv3,'b-',s,cv4,'m-',s,cv5,'c-')
+title('Volumetric heat capacity')
+xlabel('Relative soil moisture')
+ylabel('Volumetric heat capacity (W J m^{–3} K^{–1})')
+legend('sand','sandy loam','loam','clay loam','clay','Location','best')
+
 % Write formated output to text file: n rows x 6 columns
 % column 1 = relative soil water (s)
 % column 2 = thermal conductivity for soil 1 (W/m/K)
@@ -144,7 +146,6 @@ legend('sand','sandy loam','loam','clay loam','clay','Location','best')
 % column 4 = thermal conductivity for soil 3 (W/m/K)
 % column 5 = thermal conductivity for soil 4 (W/m/K)
 % column 6 = thermal conductivity for soil 5 (W/m/K)
-
 A = [s; tk1; tk2; tk3; tk4; tk5];
 fileID = fopen('tk.txt','w');
 fprintf(fileID,'%12s %12s %12s %12s %12s %12s\n','s','tex1','tex2','tex3','tex4','tex5');
@@ -158,7 +159,6 @@ fclose(fileID);
 % column 4 = heat capacity for soil 3 (MJ/m3/K)
 % column 5 = heat capacity for soil 4 (MJ/m3/K)
 % column 6 = heat capacity for soil 5 (MJ/m3/K)
-
 B = [s; cv1; cv2; cv3; cv4; cv5];
 fileID = fopen('cv.txt','w');
 fprintf(fileID,'%12s %12s %12s %12s %12s %12s\n','s','tex1','tex2','tex3','tex4','tex5');
