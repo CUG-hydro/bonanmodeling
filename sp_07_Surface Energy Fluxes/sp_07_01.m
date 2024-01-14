@@ -1,5 +1,4 @@
 % Supplemental program 7.1
-clear, clc, close all
 import module_Radiation.*
 import module_HydroTools.*
 import module_Ipaper.*
