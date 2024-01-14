@@ -99,44 +99,33 @@ b(i) = m - a(i);
 d(i) = m * soilvar.tsoi(i);
 
 % --- Solve for soil temperature
-
 [soilvar.tsoi] = tridiagonal_solver (a, b, c, d, soilvar.nsoi);
 
 % --- Derive energy flux into soil (W/m2)
-
 soilvar.gsoi = soilvar.tk(1) * (tsurf - soilvar.tsoi(1)) / (0 - soilvar.z(1));
 
 % --- Phase change for soil layers undergoing freezing of thawing
-
 switch soilvar.method
-
    case 'apparent-heat-capacity'
-
    % No explicit phase change energy flux. This is included in the heat capacity.
-
    soilvar.hfsoi = 0;
 
    case 'excess-heat'
-
    % Adjust temperatures for phase change. Freeze or melt ice using energy
    % excess or deficit needed to change temperature to the freezing point.
    % The variable hfsoi is returned as the energy flux from phase change (W/m2).
-
    [soilvar] = phase_change (physcon, soilvar, dt);
 
 end
 
-% --- Check for energy conservation
-
+%% --- Check for energy conservation
 % Sum change in energy (W/m2)
-
 edif = 0;
 for i = 1:soilvar.nsoi
    edif = edif + soilvar.cv(i) * soilvar.dz(i) * (soilvar.tsoi(i) - tsoi0(i)) / dt;
 end
 
 % Error check
-
 err = edif - soilvar.gsoi - soilvar.hfsoi;
 if (abs(err) > 1e-03)
    error ('Soil temperature energy conservation error')

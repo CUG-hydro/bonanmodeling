@@ -156,7 +156,6 @@ for iday = 1:nday
          end
 
       end
-
    end
 end
 

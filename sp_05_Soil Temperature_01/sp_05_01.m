@@ -1,9 +1,13 @@
 % Supplemental program 5.1
+clear, clc, close all
 
 % ----------------------------------------
 % Calculate and graph thermal conductivity
+% 
+%% GOALS
+% - `thermal conductivity`
+% - `Volumetric heat capacity`
 % ----------------------------------------
-
 cwat = 4188;               % Specific heat of water (J/kg/K)
 cice = 2117.27;            % Specific heat ice (J/kg/K)
 
@@ -30,7 +34,6 @@ tk_quartz = 7.7;           % Thermal conductivity of quartz (W/m/K)
 %  9: sandy clay
 % 10: silty clay
 % 11: clay
-
 silt = [ 5, 12, 32, 70, 39, 15, 56, 34,  6, 47, 20];       % Percent silt
 sand = [92, 82, 58, 17, 43, 58, 10, 32, 52,  6, 22];       % Percent sand
 clay = [ 3,  6, 10, 13, 18, 27, 34, 34, 42, 47, 58];       % Percent clay
@@ -41,17 +44,26 @@ clay = [ 3,  6, 10, 13, 18, 27, 34, 34, 42, 47, 58];       % Percent clay
 watsat = [0.395, 0.410, 0.435, 0.485, 0.451, 0.420, 0.477, 0.476, 0.426, 0.492, 0.482];
 
 % Define 5 soil types to process
-
 soiltyp = [1, 3, 5, 8, 11];
 
 % Set relative soil water content (s) from 0 to 1
-
 inc = 0.05;                             % increment
 n = (1 - 0) / inc + 1;                  % number of values
 s = linspace(0,1,n);                    % n evenly spaced values between 0 and 1 (inclusive)
 
-% Loop through each soil type
+ns = length(s);
+tk1 = zeros(1, ns);
+tk2 = zeros(1, ns);
+tk3 = zeros(1, ns);
+tk4 = zeros(1, ns);
+tk5 = zeros(1, ns);
+cv1 = zeros(1, ns);
+cv2 = zeros(1, ns);
+cv3 = zeros(1, ns);
+cv4 = zeros(1, ns);
+cv5 = zeros(1, ns);
 
+% Loop through each soil type
 for i = 1:length(soiltyp)
    % Soil texture to process
    k = soiltyp(i);
@@ -68,7 +80,6 @@ for i = 1:length(soiltyp)
 
       % Soil solids thermal conducitivty (W/m/K) from quartz fraction
       % tko = thermal conductivity of other minerals (W/m/K)
-
       quartz = sand(k) / 100;
       if (quartz > 0.2)
          tko = 2.0;
@@ -78,12 +89,10 @@ for i = 1:length(soiltyp)
       tksol = (tk_quartz^quartz) * (tko^(1-quartz));
 
       % Unfrozen and frozen saturated thermal conductivity (W/m/K)
-
       tksat_u = (tksol^(1-watsat(k))) * (tkwat^watsat(k));
       tksat_f = (tksol^(1-watsat(k))) * (tkice^watsat(k));
 
       % Unfrozen and frozen Kersten number
-
       if (sand(k) < 50)
          ke_u = log10(max(s(j),0.1)) + 1;
       else
@@ -92,17 +101,14 @@ for i = 1:length(soiltyp)
       ke_f = s(j);
 
       % Unfrozen and frozen thermal conductivity (W/m/K)
-
       tku = (tksat_u - tkdry) * ke_u + tkdry;
       tkf = (tksat_f - tkdry) * ke_f + tkdry;
 
       % Unfrozen and frozen heat capacity (J/m3/K)
-
       cvu = (1 - watsat(k)) * cvsol + cvwat * h2osoi;
       cvf = (1 - watsat(k)) * cvsol + cvice * h2osoi;
 
       % Save values for each texture type
-
       if (i == 1)
          tk1(j) = tku;
          cv1(j) = cvu * 1e-06;
@@ -119,18 +125,15 @@ for i = 1:length(soiltyp)
          tk5(j) = tku;
          cv5(j) = cvu * 1e-06;
       end
-
    end      % end soil water loop j
 end         % end soil type loop i
 
 % Make graph
-
 plot(s,tk1,'r-',s,tk2,'g-',s,tk3,'b-',s,tk4,'m-',s,tk5,'c-')
 title('Thermal conductivity')
 xlabel('Relative soil moisture')
 ylabel('Thermal conductivity (W m^{-1} K^{-1})')
 legend('sand','sandy loam','loam','clay loam','clay','Location','best')
-
 
 figure
 plot(s,cv1,'r-',s,cv2,'g-',s,cv3,'b-',s,cv4,'m-',s,cv5,'c-')

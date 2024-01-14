@@ -112,6 +112,7 @@ tk5, cv5 = cal_soil_param(soiltyp[5], sm)
 using Plots
 using LaTeXStrings
 
+s = sm;
 plot(s,tk1,label="sand", frame=:box)
 plot!(s,tk2,label="sandy loam")
 plot!(s,tk3,label="loam")
