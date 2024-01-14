@@ -1,15 +1,10 @@
 classdef module_HydroTools
   %UNTITLED 此处提供此类的摘要
   %   此处提供详细说明
-  properties
-    Property1
+  properties (Constant)
   end
   
-  methods (Static)
-    function hello()
-      fprintf("hello world\n");
-    end
-    
+  methods (Static)    
     function [phi_c] = phi_c_monin_obukhov (x)
       % --- Evaluate the Monin-Obukhov phi function for scalars at x
       if (x < 0)

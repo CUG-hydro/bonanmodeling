@@ -132,19 +132,6 @@ for j = 1:nday
     [forcvar.cpair, forcvar.thref, forcvar.thvref, forcvar.mmair, forcvar.rhomol] = ...
       cal_Cp(forcvar.tref, forcvar.eref, forcvar.pref, forcvar.zref);
     
-    % forcvar.thref =  forcvar.tref + 0.0098 * forcvar.zref;
-    % forcvar.qref = physcon.mmh2o / physcon.mmdry * forcvar.eref / ...
-    %   (forcvar.pref - (1 - physcon.mmh2o/physcon.mmdry) * forcvar.eref);
-    % forcvar.thvref = forcvar.thref * (1 + 0.61 * forcvar.qref);
-    % forcvar.rhomol = forcvar.pref / (physcon.rgas * forcvar.tref);
-    % forcvar.rhoair = forcvar.rhomol * physcon.mmdry * ...
-    %   (1 - (1 - physcon.mmh2o / physcon.mmdry) * forcvar.eref / forcvar.pref);
-    % forcvar.mmair = forcvar.rhoair / forcvar.rhomol;
-    % forcvar.cpair = physcon.cpd * (1 + (physcon.cpw/physcon.cpd - 1) * forcvar.qref);     % J/kg/K
-    % forcvar.cpair = forcvar.cpair * forcvar.mmair;                                        % J/mol/K
-    
-    %% 计算Cp
-
     % Solar radiation (W/m2)
     % doy        ! Day of year (1 to 365)
     % lat        ! Latitude (radians)
@@ -162,22 +149,8 @@ for j = 1:nday
     % solrad     ! Total solar radiation on horizontal surface (W/m2)
     
     % Solar radiation at top of the atmosphere
-    %% 这里reback 如何？
-    % [Rs_toa, Rs, Rs_dir, Rs_dif, coszen] = cal_Rs_toa(lat, doy, hour);
-    % forcvar.solrad = Rs;                    % Total at surface
-    % Solar radiation at top of the atmosphere
-    decl = 23.45 * sin((284+doy)/365*2*pi) * pi/180;
-    hour_angle = 15 * (hour-12) * pi/180;
-    coszen = max(cos(lat)*cos(decl)*cos(hour_angle) + sin(lat)*sin(decl), 0);
-    rv = 1 / sqrt(1 + 0.033*cos(doy/365*2*pi));
-    soltoa = solcon / rv^2 * coszen;
-    
-    % Clear sky atmospheric attenuation: Gates, D.M. (1980) Biophysical Ecology, page 110, 115
-    tau_atm = 0.5;
-    oam = 1 / max(coszen, 0.04);
-    soldir = soltoa * tau_atm^oam;                       % Clear sky direct beam
-    soldif = soltoa * (0.271 - 0.294 * tau_atm^oam);     % Clear sky diffuse
-    forcvar.solrad = soldir + soldif;                    % Total at surface
+    [Rs_toa, Rs, Rs_dir, Rs_dif, coszen] = cal_Rs_toa(lat, doy, hour);
+    forcvar.solrad = Rs;                    % Total at surface
     
     % Longwave radiation (W/m2)
     forcvar.lwdown = (0.398e-05 * forcvar.tref^2.148) * physcon.sigma * forcvar.tref^4;
