@@ -11,8 +11,8 @@ gs2 = 2.0;
 % --- Check for minimum stomatal conductance linked to low light or drought stress based
 % on the water-use efficiency and cavitation checks for gs1 and gs2 (check1, check2)
 
-[flux, check1] = StomataEfficiency (physcon, atmos, leaf, flux, gs1);
-[flux, check2] = StomataEfficiency (physcon, atmos, leaf, flux, gs2);
+[flux, check1] = StomataEfficiency (gs1, physcon, atmos, leaf, flux);
+[flux, check2] = StomataEfficiency (gs2, physcon, atmos, leaf, flux);
 
 if (check1 * check2 < 0)
 
@@ -21,7 +21,7 @@ if (check1 * check2 < 0)
 
    tol = 0.004;
    func_name = 'StomataEfficiency';
-   [flux, root] = brent_root (func_name, physcon, atmos, leaf, flux, gs1, gs2, tol);
+   [flux, root] = root_brent (func_name, gs1, gs2, tol, physcon, atmos, leaf, flux);
    flux.gs = root;
 
 else

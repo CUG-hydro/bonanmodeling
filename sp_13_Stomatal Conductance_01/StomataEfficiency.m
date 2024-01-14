@@ -1,4 +1,4 @@
-function [flux, val] = StomataEfficiency (physcon, atmos, leaf, flux, gs_val)
+function [flux, val] = StomataEfficiency (gs_val, varargin)
 
 % Stomata water-use efficiency check and cavitation check to determine maximum gs. 
 % For the stomatal conductance gs_val, calculate photosynthesis and leaf
@@ -7,13 +7,13 @@ function [flux, val] = StomataEfficiency (physcon, atmos, leaf, flux, gs_val)
 % photosynthesis > iota*vpd*delta or if the leaf water potential is > minlwp.
 % The returned value is negative if the increase produces a change in
 % photosynthesis < iota*vpd*delta or if the leaf water potential is < minlwp.
+if length(varargin) == 1 && iscell(varargin{1}); varargin = varargin{1}; end
+[physcon, atmos, leaf, flux] = flatten(varargin);
 
 % --- Leaf boundary layer conductances
-
 [flux] = LeafBoundaryLayer (physcon, atmos, leaf, flux);
 
 % --- Specify "delta" as a small difference in gs (mol H2O/m2/s)
-
 delta = 0.001;
 
 % --- Calculate photosynthesis at lower gs (gs_val - delta), but first need leaf temperature for this gs
@@ -37,14 +37,11 @@ flux.gs = gs1;
 an1 = flux.an;
 
 % --- Efficiency check: wue < 0 when d(An) / d(gs) < iota * vpd
-
 wue = (an1 - an2) - leaf.iota * delta * (flux.vpd / atmos.patm);
 
 % --- Cavitation check: minpsi < 0 when leafwp < minlwp
-
 [leafwp] = LeafWaterPotential (physcon, leaf, flux);
 minpsi = leafwp - leaf.minlwp;
 
 % --- Return the minimum of the two checks
-
 val = min(wue, minpsi);

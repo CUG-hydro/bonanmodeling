@@ -74,50 +74,50 @@ function [flux] = LeafPhotosynthesis (physcon, atmos, leaf, flux)
 % --- Adjust photosynthetic parameters for temperature
 
 if (leaf.c3psn == 1)
-
-   % C3 temperature response
-
-   ft = @(tl, ha) exp(ha/(physcon.rgas*(physcon.tfrz+25)) * (1-(physcon.tfrz+25)/tl));
-   fth = @(tl, hd, se, fc) fc / (1 + exp((-hd+se*tl)/(physcon.rgas*tl)));
-
-   flux.kc = leaf.kc25 * ft(flux.tleaf, leaf.kcha);
-   flux.ko = leaf.ko25 * ft(flux.tleaf, leaf.koha);
-   flux.cp = leaf.cp25 * ft(flux.tleaf, leaf.cpha);
-
-   t1 = ft(flux.tleaf, leaf.vcmaxha);
-   t2 = fth(flux.tleaf, leaf.vcmaxhd, leaf.vcmaxse, leaf.vcmaxc);
-   flux.vcmax = leaf.vcmax25 * t1 * t2;
-
-   t1 = ft(flux.tleaf, leaf.jmaxha);
-   t2 = fth(flux.tleaf, leaf.jmaxhd, leaf.jmaxse, leaf.jmaxc);
-   flux.jmax = leaf.jmax25 * t1 * t2;
-
-   t1 = ft(flux.tleaf, leaf.rdha);
-   t2 = fth(flux.tleaf, leaf.rdhd, leaf.rdse, leaf.rdc);
-   flux.rd = leaf.rd25 * t1 * t2;
-
-   flux.kp_c4 = 0;
-
+  
+  % C3 temperature response
+  
+  ft = @(tl, ha) exp(ha/(physcon.rgas*(physcon.tfrz+25)) * (1-(physcon.tfrz+25)/tl));
+  fth = @(tl, hd, se, fc) fc / (1 + exp((-hd+se*tl)/(physcon.rgas*tl)));
+  
+  flux.kc = leaf.kc25 * ft(flux.tleaf, leaf.kcha);
+  flux.ko = leaf.ko25 * ft(flux.tleaf, leaf.koha);
+  flux.cp = leaf.cp25 * ft(flux.tleaf, leaf.cpha);
+  
+  t1 = ft(flux.tleaf, leaf.vcmaxha);
+  t2 = fth(flux.tleaf, leaf.vcmaxhd, leaf.vcmaxse, leaf.vcmaxc);
+  flux.vcmax = leaf.vcmax25 * t1 * t2;
+  
+  t1 = ft(flux.tleaf, leaf.jmaxha);
+  t2 = fth(flux.tleaf, leaf.jmaxhd, leaf.jmaxse, leaf.jmaxc);
+  flux.jmax = leaf.jmax25 * t1 * t2;
+  
+  t1 = ft(flux.tleaf, leaf.rdha);
+  t2 = fth(flux.tleaf, leaf.rdhd, leaf.rdse, leaf.rdc);
+  flux.rd = leaf.rd25 * t1 * t2;
+  
+  flux.kp_c4 = 0;
+  
 elseif (leaf.c3psn == 0)
-
-   % C4 temperature response
-
-   t1 = 2^((flux.tleaf-(physcon.tfrz+25)) / 10);
-   t2 = 1 + exp(0.2*((physcon.tfrz+15)-flux.tleaf));
-   t3 = 1 + exp(0.3*(flux.tleaf-(physcon.tfrz+40)));
-   flux.vcmax = leaf.vcmax25 * t1 / (t2 * t3);
-
-   t3 = 1 + exp(1.3*(flux.tleaf-(physcon.tfrz+55)));
-   flux.rd = leaf.rd25  * t1 / t3;
-
-   flux.kp_c4 = leaf.kp25_c4 * t1;
-
-   flux.kc = 0;
-   flux.ko = 0;
-   flux.cp = 0;
-   flux.jmax = 0;
-   flux.je = 0;
-
+  
+  % C4 temperature response
+  
+  t1 = 2^((flux.tleaf-(physcon.tfrz+25)) / 10);
+  t2 = 1 + exp(0.2*((physcon.tfrz+15)-flux.tleaf));
+  t3 = 1 + exp(0.3*(flux.tleaf-(physcon.tfrz+40)));
+  flux.vcmax = leaf.vcmax25 * t1 / (t2 * t3);
+  
+  t3 = 1 + exp(1.3*(flux.tleaf-(physcon.tfrz+55)));
+  flux.rd = leaf.rd25  * t1 / t3;
+  
+  flux.kp_c4 = leaf.kp25_c4 * t1;
+  
+  flux.kc = 0;
+  flux.ko = 0;
+  flux.cp = 0;
+  flux.jmax = 0;
+  flux.je = 0;
+  
 end
 
 % --- Electron transport rate for C3 plants
@@ -126,43 +126,39 @@ end
 % for Je. Correct solution is the smallest of the two roots.
 
 if (leaf.c3psn == 1)
-   qabs = 0.5 * leaf.phi_psii * flux.apar;
-   aquad = leaf.theta_j;
-   bquad = -(qabs + flux.jmax);
-   cquad = qabs * flux.jmax;
-   pcoeff = [aquad bquad cquad];
-   proots = roots(pcoeff);
-   flux.je = min(proots(1), proots(2));
+  qabs = 0.5 * leaf.phi_psii * flux.apar;
+  aquad = leaf.theta_j;
+  bquad = -(qabs + flux.jmax);
+  cquad = qabs * flux.jmax;
+  pcoeff = [aquad bquad cquad];
+  proots = roots(pcoeff);
+  flux.je = min(proots(1), proots(2));
 end
 
 % --- Ci calculation
-
 if (leaf.gstyp <= 1)
-
-   % Initial estimates for Ci
-
-   if (leaf.c3psn == 1)
-      ci0 = 0.7 * atmos.co2air;
-   elseif (leaf.c3psn == 0)
-      ci0 = 0.4 * atmos.co2air;
-   end
-   ci1 = ci0 * 0.99;
-
-   % Solve for Ci: Use CiFunc to iterate photosynthesis calculations
-   % until the change in Ci is < tol. Ci has units umol/mol
-
-   tol = 0.1;                 % Accuracy tolerance for Ci (umol/mol)
-   func_name = 'CiFunc';      % The function name
-
-   [flux, dummy] = hybrid_root (func_name, physcon, atmos, leaf, flux, ci0, ci1, tol);
-   flux.ci = dummy;
-
+  
+  % Initial estimates for Ci
+  if (leaf.c3psn == 1)
+    ci0 = 0.7 * atmos.co2air;
+  elseif (leaf.c3psn == 0)
+    ci0 = 0.4 * atmos.co2air;
+  end
+  ci1 = ci0 * 0.99;
+  
+  % Solve for Ci: Use CiFunc to iterate photosynthesis calculations
+  % until the change in Ci is < tol. Ci has units umol/mol
+  tol = 0.1;                 % Accuracy tolerance for Ci (umol/mol)
+  func_name = 'CiFunc';      % The function name
+  
+  [flux, dummy] = root_hybrid (func_name, ci0, ci1, tol, physcon, atmos, leaf, flux);
+  flux.ci = dummy;
+  
 elseif (leaf.gstyp == 2)
-
-   % Calculate photosynthesis for a specified stomatal conductance
-
-   [flux] = CiFuncOptimization (atmos, leaf, flux);
-
+  
+  % Calculate photosynthesis for a specified stomatal conductance
+  [flux] = CiFuncOptimization (atmos, leaf, flux);
+  
 end
 
 % --- Relative humidity and vapor pressure at leaf surface
@@ -172,43 +168,40 @@ flux.hs = (flux.gbv * atmos.eair + flux.gs * esat) / ((flux.gbv + flux.gs) * esa
 flux.vpd = max(esat - flux.hs*esat, 0.1);
 
 % --- Make sure iterative solution is correct
-
 if (flux.gs < 0)
-   error ('LeafPhotosynthesis: negative stomatal conductance')
+  error ('LeafPhotosynthesis: negative stomatal conductance')
 end
 
 % Compare with Ball-Berry model. The solution blows up with low eair. In input
 % data, eair should be > 0.05*esat to ensure that hs does not go to zero.
 
 if (leaf.gstyp == 1)
-   gs_err = leaf.g1 * max(flux.an, 0) * flux.hs / flux.cs + leaf.g0;
-   if (abs(flux.gs-gs_err)*1e06 > 1e-04)
-      fprintf('gs = %15.4f\n', flux.gs)
-      fprintf('gs_err = %15.4f\n', gs_err)
-      error ('LeafPhotosynthesis: failed Ball-Berry error check')
-   end
+  gs_err = leaf.g1 * max(flux.an, 0) * flux.hs / flux.cs + leaf.g0;
+  if (abs(flux.gs-gs_err)*1e06 > 1e-04)
+    fprintf('gs = %15.4f\n', flux.gs)
+    fprintf('gs_err = %15.4f\n', gs_err)
+    error ('LeafPhotosynthesis: failed Ball-Berry error check')
+  end
 end
 
 % Compare with Medlyn model. The solutions blows up with vpd = 0. The
 % quadratic calcuation of gsw in CiFunc constrains vpd > 50 Pa, so this
 % comparison is only valid for those conditions.
-
 if (leaf.gstyp == 0)
-   if ((esat - atmos.eair) > 50)
-      gs_err = 1.6 * (1 + leaf.g1 / sqrt(flux.vpd*0.001)) * max(flux.an, 0) / flux.cs + leaf.g0;
-      if (abs(flux.gs-gs_err)*1e06 > 1e-04)
-         fprintf('gs = %15.4f\n', flux.gs)
-         fprintf('gs_err = %15.4f\n', gs_err)
-         error ('LeafPhotosynthesis: failed Medlyn error check')
-      end
-   end
+  if ((esat - atmos.eair) > 50)
+    gs_err = 1.6 * (1 + leaf.g1 / sqrt(flux.vpd*0.001)) * max(flux.an, 0) / flux.cs + leaf.g0;
+    if (abs(flux.gs-gs_err)*1e06 > 1e-04)
+      fprintf('gs = %15.4f\n', flux.gs)
+      fprintf('gs_err = %15.4f\n', gs_err)
+      error ('LeafPhotosynthesis: failed Medlyn error check')
+    end
+  end
 end
 
 % Compare with diffusion equation: An = (ca - ci) * gleaf
-
 an_err = (atmos.co2air - flux.ci) / (1 / flux.gbc + 1.6 / flux.gs);
 if (flux.an > 0 & abs(flux.an-an_err) > 0.01)
-   fprintf('An = %15.4f\n', flux.an)
-   fprintf('An_err = %15.4f\n', an_err)
-   error ('LeafPhotosynthesis: failed diffusion error check')
+  fprintf('An = %15.4f\n', flux.an)
+  fprintf('An_err = %15.4f\n', an_err)
+  error ('LeafPhotosynthesis: failed diffusion error check')
 end

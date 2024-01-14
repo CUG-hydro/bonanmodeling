@@ -154,7 +154,7 @@ if (leaf.gstyp <= 1)
    tol = 0.1;                 % Accuracy tolerance for Ci (umol/mol)
    func_name = 'CiFunc';      % The function name
 
-   [flux, dummy] = hybrid_root (func_name, physcon, atmos, leaf, flux, ci0, ci1, tol);
+   [flux, dummy] = root_hybrid (func_name, ci0, ci1, tol, physcon, atmos, leaf, flux);
    flux.ci = dummy;
 
 elseif (leaf.gstyp == 2)

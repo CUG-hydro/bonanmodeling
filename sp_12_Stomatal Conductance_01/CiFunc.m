@@ -1,4 +1,4 @@
-function [flux, ci_dif] = CiFunc (physcon, atmos, leaf, flux, ci_val)
+function [flux, ci_dif] = CiFunc (ci_val, varargin)
 
 % Calculate leaf photosynthesis and stomatal conductance for a specified Ci
 % (ci_val). Then calculate a new Ci from the diffusion equation. This function
@@ -43,6 +43,8 @@ function [flux, ci_dif] = CiFunc (physcon, atmos, leaf, flux, ci_val)
 %   flux.gs             ! Leaf stomatal conductance (mol H2O/m2 leaf/s)
 %   ci_dif              ! Difference in Ci
 % ------------------------------------------------------
+if length(varargin) == 1 && iscell(varargin{1}); varargin = varargin{1}; end
+[physcon, atmos, leaf, flux] = flatten(varargin);
 
 % --- Metabolic (demand-based) photosynthetic rate
 

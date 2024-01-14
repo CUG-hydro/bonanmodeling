@@ -215,14 +215,17 @@ flux.dt = 30 * 60;
 [flux] = LeafFluxes (physcon, atmos, leaf, flux);
 
 % Print flux output
+fid = fopen('output.txt', 'w');
 
-fprintf('dleaf = %15.5f\n',leaf.dleaf*100)          % m -> cm
-fprintf('apar = %15.5f\n',flux.apar)
-fprintf('tleaf = %15.5f\n',flux.tleaf-physcon.tfrz) % K -> oC
-fprintf('qa = %15.5f\n',flux.qa)
-fprintf('lhflx = %15.5f\n',flux.lhflx)
-fprintf('etflx = %15.5f\n',flux.etflx*1000)         % mol H2O/m2/s -> mmol H2O/m2/s
-fprintf('an = %15.5f\n',flux.an)
-fprintf('gbh = %15.5f\n',flux.gbh)
-fprintf('gs = %15.5f\n',flux.gs)
-fprintf('psi_leaf = %15.5f\n',flux.psi_leaf)
+fprintf(fid, 'dleaf = %15.5f\n',leaf.dleaf*100);          % m -> cm
+fprintf(fid, 'apar = %15.5f\n',flux.apar);
+fprintf(fid, 'tleaf = %15.5f\n',flux.tleaf-physcon.tfrz); % K -> oC
+fprintf(fid, 'qa = %15.5f\n',flux.qa);
+fprintf(fid, 'lhflx = %15.5f\n',flux.lhflx);
+fprintf(fid, 'etflx = %15.5f\n',flux.etflx*1000);         % mol H2O/m2/s -> mmol H2O/m2/s
+fprintf(fid, 'an = %15.5f\n',flux.an);
+fprintf(fid, 'gbh = %15.5f\n',flux.gbh);
+fprintf(fid, 'gs = %15.5f\n',flux.gs);
+fprintf(fid, 'psi_leaf = %15.5f\n',flux.psi_leaf);
+
+fclose(fid);

@@ -14,7 +14,7 @@ if (leaf.gstyp <= 1)
    tol = 0.1;                    % Accuracy tolerance for tleaf (K)
    func_name = 'TleafFunc';      % The function name
 
-   [flux, dummy] = hybrid_root (func_name, physcon, atmos, leaf, flux, t0, t1, tol);
+   [flux, dummy] = root_hybrid (func_name, t0, t1, tol, physcon, atmos, leaf, flux);
 
 elseif (leaf.gstyp == 2)
 
