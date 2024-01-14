@@ -1,6 +1,7 @@
 %% Supplemental program 5.2
 % Diurnal cycle of soil temperature with phase change using
 % "excess heat" or "apparent heat capacity"
+addpath ..
 
 %% --- Physical constants in physcon structure
 physcon.tfrz = 273.15;                         % Freezing point of water (K)

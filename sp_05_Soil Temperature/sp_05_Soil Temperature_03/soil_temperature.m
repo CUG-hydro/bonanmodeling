@@ -60,9 +60,6 @@ solution = 'implicit';       % Use implicit solution
 
 % --- Save current soil temperature for energy conservation check
 tsoi0 = soilvar.tsoi;
-% for i = 1:soilvar.nsoi
-%    tsoi0(i) = soilvar.tsoi(i);
-% end
 
 % --- Thermal conductivity at interface (W/m/K)
 for i = 1:soilvar.nsoi-1

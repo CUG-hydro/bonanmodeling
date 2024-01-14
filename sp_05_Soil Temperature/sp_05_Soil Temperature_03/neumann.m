@@ -11,21 +11,17 @@ depth(3) = 0.85;
 depth(4) = 1.15;
 
 % number of days to simulate
-
 ndays = 60;
 
 % time-invariant surface temperature (deg C)
-
 ts = -10;
 
 % initial soil temperature (deg C)
-
 for i = 1:nsoi
    t0(i) = 2;
 end
 
 % freezing temperature (deg C)
-
 tf = 0;
 
 % soil dependent constants
@@ -40,7 +36,6 @@ rm = 3.6 / (60 * 100);
 rg = rm / (2 * sqrt(a1));
 
 % save output for day zero (i.e., initial conditions)
-
 m = 1;
 iday_out(m) = 0;
 xfr_out(m) = 0;
@@ -88,7 +83,6 @@ for iday = 1:ndays
    z2_out(m) = depth(2) * 100;
    z3_out(m) = depth(3) * 100;
    z4_out(m) = depth(4) * 100;
-
 end
 
 A = [iday_out; xf_out; z1_out; t1_out; z2_out; t2_out; z3_out; t3_out; z4_out; t4_out];

@@ -1,5 +1,5 @@
 % Supplemental program 5.3
-
+addpath ..
 % -------------------------------------------------------------------------
 % Use implicit formulation with "excess heat" or "apparent heat capacity"
 % to solve for soil temperatures with phase change in comparison with

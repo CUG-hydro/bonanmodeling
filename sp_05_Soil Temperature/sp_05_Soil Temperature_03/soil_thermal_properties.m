@@ -19,32 +19,26 @@ function [soilvar] = soil_thermal_properties (physcon, soilvar)
 % ------------------------------------------------------
 
 % Temperature range for freezing and thawing (K)
-
 tinc = 0.5;
 
 % Unfrozen and frozen thermal conductivity (W/m/K)
-
 tku = 1.860;
 tkf = 2.324;
 
 % Unfrozen and frozen heat capacity (J/m3/K)
-
 cvu = 2.862e06;
 cvf = 1.966e06;
 
 for i = 1:soilvar.nsoi
 
    % --- Volumetric soil water and ice
-
    watliq = soilvar.h2osoi_liq(i) / (physcon.rhowat * soilvar.dz(i));
    watice = soilvar.h2osoi_ice(i) / (physcon.rhoice * soilvar.dz(i));
 
    % Heat of fusion (J/m3) - This is equivalent to ql = hfus * (h2osoi_liq + h2osoi_ice) / dz
-
    ql = physcon.hfus * (physcon.rhowat * watliq + physcon.rhoice * watice);
 
    % Heat capacity and thermal conductivity
-
    if (soilvar.tsoi(i) > physcon.tfrz+tinc)
       soilvar.cv(i) = cvu;
       soilvar.tk(i) = tku;
@@ -64,5 +58,4 @@ for i = 1:soilvar.nsoi
       soilvar.cv(i) = cvf;
       soilvar.tk(i) = tkf;
    end
-
 end
