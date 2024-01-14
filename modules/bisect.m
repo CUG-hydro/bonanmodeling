@@ -24,7 +24,6 @@ if (sign(fa) == sign(fb))
 end
 
 % Iterate to find root
-
 while (abs(b - a) > 2*delta)
    c = (b + a)/2;
    fc = feval(func_name, c, var);
