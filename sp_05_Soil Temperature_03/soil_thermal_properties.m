@@ -1,7 +1,5 @@
 function [soilvar] = soil_thermal_properties (physcon, soilvar)
-
 % Calculate soil thermal conductivity and heat capacity
-
 % ------------------------------------------------------
 % Input
 %   physcon.hfus             ! Heat of fusion for water at 0 C (J/kg)

@@ -37,6 +37,7 @@ function [soilvar] = soil_temperature (physcon, soilvar, tsurf, dt)
 %   dt                      ! Time step (s)
 
 %   soilvar.method          ! Use excess heat or apparent heat capacity for phase change
+
 %   soilvar.nsoi            ! Number of soil layers
 %   soilvar.z               ! Soil depth (m)
 %   soilvar.z_plus_onehalf  ! Soil depth (m) at i+1/2 interface between layers i and i+1
@@ -64,6 +65,7 @@ tk_plus_onehalf = zeros(1, nsoi-1);
 
 z = soilvar.z;
 z_plus_onehalf = soilvar.z_plus_onehalf;
+dz_plus_onehalf = soilvar.dz_plus_onehalf;
 tk = soilvar.tk;
 
 % --- Thermal conductivity at interface (W/m/K)
@@ -78,15 +80,15 @@ i = 1;
 m = soilvar.cv(i) * soilvar.dz(i) / dt;
 
 a(i) = 0;
-c(i) = -tk_plus_onehalf(i) / soilvar.dz_plus_onehalf(i);
+c(i) = -tk_plus_onehalf(i) / dz_plus_onehalf(i);
 b(i) = m - c(i) + tk(i) / (0 - z(i));
 d(i) = m * tsoi0(i) + tk(i) / (0 - z(i)) * tsurf;
 
 % Layers 2 to nsoi-1
 for i = 2:soilvar.nsoi-1
    m = soilvar.cv(i) * soilvar.dz(i) / dt;
-   a(i) = -tk_plus_onehalf(i-1) / soilvar.dz_plus_onehalf(i-1);
-   c(i) = -tk_plus_onehalf(i) / soilvar.dz_plus_onehalf(i);
+   a(i) = -tk_plus_onehalf(i-1) / dz_plus_onehalf(i-1);
+   c(i) = -tk_plus_onehalf(i) / dz_plus_onehalf(i);
    b(i) = m - a(i) - c(i);
    d(i) = m * tsoi0(i);
 end
@@ -94,7 +96,7 @@ end
 % Bottom soil layer with zero heat flux
 i = soilvar.nsoi;
 m = soilvar.cv(i) * soilvar.dz(i) / dt;
-a(i) = -tk_plus_onehalf(i-1) / soilvar.dz_plus_onehalf(i-1);
+a(i) = -tk_plus_onehalf(i-1) / dz_plus_onehalf(i-1);
 c(i) = 0;
 b(i) = m - a(i);
 d(i) = m * tsoi0(i);

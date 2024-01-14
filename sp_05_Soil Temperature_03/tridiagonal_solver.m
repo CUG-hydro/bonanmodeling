@@ -1,4 +1,4 @@
-function [u] = tridiagonal_solver (a, b, c, d, n)
+function u = tridiagonal_solver (a, b, c, d, n)
 
 % Solve for U given the set of equations R * U = D, where U is a vector
 % of length N, D is a vector of length N, and R is an N x N tridiagonal
@@ -19,25 +19,27 @@ function [u] = tridiagonal_solver (a, b, c, d, n)
 % equations so that:
 %
 %    U_i = F_i - E_i * U_i+1
+%% Arguments: 
+% - a,b,c,d: vectors of length N
+% - n: length of the vectors
 
 % --- Forward sweep (1 -> N) to get E and F
+e = zeros(1, n-1);
+f = zeros(1, n-1);
+u = zeros(1, n);
 
 e(1) = c(1) / b(1);
-
 for i = 2: 1: n-1
    e(i) = c(i) / (b(i) - a(i) * e(i-1));
 end
 
 f(1) = d(1) / b(1);
-
 for i = 2: 1: n
    f(i) = (d(i) - a(i) * f(i-1)) / (b(i) - a(i) * e(i-1));
 end
 
 % --- Backward substitution (N -> 1) to solve for U
-
 u(n) = f(n);
-
 for i = n-1: -1: 1
    u(i) = f(i) - e(i) * u(i+1);
 end

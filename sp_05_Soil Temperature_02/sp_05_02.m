@@ -61,7 +61,7 @@ for iday = 1:nday
   for itim = 1:ntim
     % Hour of day
     hour = itim * (dt/86400 * 24);
-    
+  
     % Surface temperature: Constant value TMEAN if TRANGE = 0. Otherwise, use a sine
     % wave with max (TMEAN + 1/2 TRANGE) at 2 pm and min (TMEAN - 1/2 TRANGE) at 2 am
     tsurf = tmean + 0.5 * trange * sin(2*pi/24 * (hour-8.0)); % 采用正弦函数来反映温度变化

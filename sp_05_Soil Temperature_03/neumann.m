@@ -1,11 +1,9 @@
 function [dummy] = neumann
-
 % --------------------------------------------------------
 % Analytical solution for Neumann problem (Lunardini 1981)
 % --------------------------------------------------------
 
 % soil depths (meters)
-
 nsoi = 4;
 depth(1) = 0.25;
 depth(2) = 0.55;
@@ -60,15 +58,12 @@ z4_out(m) = depth(4) * 100;
 for iday = 1:ndays
 
    % time (seconds)
-
    time = iday * 24 * 3600;
 
    % depth of frost penetration XF (meters) based on time (seconds)
-
    xf = 2 * rg * sqrt(a1*time);
 
    % calculate soil temperatures given XF and time
-
    for i = 1:nsoi
       if (depth(i) <= xf)
          x = depth(i) / (2*sqrt(a1*time));
@@ -82,7 +77,6 @@ for iday = 1:ndays
    end
 
    % save for output
-
    m = m + 1;
    iday_out(m) = iday;
    xf_out(m) = xf * 100;

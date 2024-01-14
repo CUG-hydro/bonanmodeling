@@ -179,5 +179,4 @@ fprintf(fileID,'%10.3f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f %
 fclose(fileID);
 
 % Analytical solution for Neumann problem (Lunardini 1981)
-
 [dummy] = neumann;
