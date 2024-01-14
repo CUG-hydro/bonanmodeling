@@ -1,5 +1,4 @@
 function [fluxvar, fx] = rsl (physcon, forcvar, surfvar, fluxvar, x)
-
 % Use Harman & Finnigan (2007, 2008) roughness sublayer (RSL) theory to obtain
 % the Obukhov length (obu). This is the function to solve for the Obukhov
 % length. For the current estimate of the Obukhov length (x), calculate
@@ -37,7 +36,6 @@ function [fluxvar, fx] = rsl (physcon, forcvar, surfvar, fluxvar, x)
 % -------------------------------------------------------------------------
 
 % --- Prevent near-zero values of Obukhov length
-
 if (abs(x) <= 0.1)
    x = 0.1;
 end
@@ -45,35 +43,28 @@ end
 % --- Determine beta_val = u* / u(h) for the current Obukhov length
 
 % Neutral value for beta = u* / u(h)
-
 beta_neutral = 0.35;
 
 % Lc/obu
-
 LcL = surfvar.Lc/x;
 
 if (LcL <= 0)
-
    % The unstable case is a quadratic equation for beta^2 at LcL
-
    a = 1;
    b = 16 * LcL * beta_neutral^4;
    c = -beta_neutral^4;
    beta_val = sqrt((-b + sqrt(b^2 - 4 * a * c)) / (2 * a));
 
    % Error check
-
    y = beta_val^2 * LcL;
    fy = (1 - 16 * y)^(-0.25);
    err = beta_val * fy - beta_neutral;
    if (abs(err) > 1e-10)
       error('unstable case: error in beta')
    end
-
 else
 
    % The stable case is a cubic equation for beta at LcL
-
    a = 5 * LcL;
    b = 0;
    c = 1;
@@ -85,22 +76,18 @@ else
    beta_val = -(b+r)/(3*a) - (b^2 - 3*a*c)/(3*a*r);
 
    % Error check
-
    y = beta_val^2 * LcL;
    fy = 1 + 5 * y;
    err = beta_val * fy - beta_neutral;
    if (abs(err) > 1e-10)
       error('stable case: error in beta')
    end
-
 end
 
 % Place limits on beta
-
 beta_val = min(0.5, max(beta_val,0.2));
 
 % --- For current beta = u*/u(h) determine displacement height
-
 dp = beta_val^2 * surfvar.Lc;                  % dp = hc - disp
 fluxvar.disp = max(surfvar.hc - dp, 0);        % Displacement height (m)
 
@@ -111,7 +98,6 @@ z_minus_d = forcvar.zref - fluxvar.disp;
 h_minus_d = surfvar.hc - fluxvar.disp;
 
 % --- Turbulent Prandlt number (Pr) at canopy height
-
 Prn = 0.5;         % Neutral value for Pr
 Prvr = 0.3;        % Magnitude of variation of Pr with stability
 Prsc = 2.0;        % Scale of variation of Pr with stability
@@ -119,22 +105,18 @@ Prsc = 2.0;        % Scale of variation of Pr with stability
 Pr = Prn + Prvr * tanh(Prsc*surfvar.Lc/x);
 
 % --- The "f" parameter relates the length scale of the scalar (heat) to that of momentum 
-
 f = (sqrt(1 + 4 * surfvar.rc * Pr) - 1) / 2;
 
 % --- Calculate the parameters c1 and c2 needed for the RSL function phi_hat
 
 % Evaluate Monin-Obukhov phi functions at (hc-disp)/obu
-
 [phi_m_hc] = phi_m_monin_obukhov (h_minus_d / x);
 [phi_c_hc] = phi_c_monin_obukhov (h_minus_d / x);
 
 % Roughness sublayer depth scale multiplier (dimensionless)
-
 c2 = 0.5;
 
 % c1 for momentum and scalars (dimensionless)
-
 c1m = (1 -    physcon.vkc / (2 * beta_val * phi_m_hc)) * exp(c2/2);
 c1c = (1 - Pr*physcon.vkc / (2 * beta_val * phi_c_hc)) * exp(c2/2);
 
@@ -142,7 +124,6 @@ c1c = (1 - Pr*physcon.vkc / (2 * beta_val * phi_c_hc)) * exp(c2/2);
 
 % These are calculated at the reference height and at the canopy height. Note that
 % here the heights are adjusted for the displacement height before the integration.
-
 [psi_m_rsl_zref] = psi_m_rsl (z_minus_d, h_minus_d, x, c1m, c2);  % momentum at (zref-disp)
 [psi_m_rsl_hc]   = psi_m_rsl (h_minus_d, h_minus_d, x, c1m, c2);  % momentum at (hc-disp)
 
@@ -152,7 +133,6 @@ c1c = (1 - Pr*physcon.vkc / (2 * beta_val * phi_c_hc)) * exp(c2/2);
 % --- Evaluate the Monin-Obukhov psi functions for momentum and scalars
 
 % These are calculated at the reference height and at the canopy height
-
 [psi_m_zref] = psi_m_monin_obukhov (z_minus_d / x);    % momentum at (zref-disp)/obu
 [psi_m_hc]   = psi_m_monin_obukhov (h_minus_d / x);    % momentum at (hc-disp)/obu
 
@@ -160,7 +140,6 @@ c1c = (1 - Pr*physcon.vkc / (2 * beta_val * phi_c_hc)) * exp(c2/2);
 [psi_c_hc]   = psi_c_monin_obukhov (h_minus_d / x);    % scalars at (hc-disp)/obu
 
 % --- Calculate u* (m/s), T* (K), q* (mol/mol), and Tv* (K)
-
 zlog = log(z_minus_d / h_minus_d);
 psim = -psi_m_zref + psi_m_hc + psi_m_rsl_zref - psi_m_rsl_hc + physcon.vkc / beta_val;
 psic = -psi_c_zref + psi_c_hc + psi_c_rsl_zref - psi_c_rsl_hc + physcon.vkc / beta_val * Pr / f;
@@ -171,7 +150,6 @@ fluxvar.qstar = (forcvar.eref - fluxvar.esrf) / forcvar.pref * physcon.vkc / (zl
 tvstar = fluxvar.tstar + 0.61 * forcvar.thref * fluxvar.qstar * (physcon.mmh2o / forcvar.mmair);
 
 % --- Calculate Obukhov length (m)
-
 fluxvar.obu = fluxvar.ustar^2 * forcvar.thvref / (physcon.vkc * physcon.grav * tvstar);
 fx = x - fluxvar.obu;
 
