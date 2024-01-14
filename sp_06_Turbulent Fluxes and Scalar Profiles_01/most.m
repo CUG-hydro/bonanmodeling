@@ -1,5 +1,4 @@
 function [fx] = most (x, var)
-
 % -------------------------------------------------------------------------
 % Use Monin-Obukhov similarity theory to obtain the Obukhov length (L).
 %
@@ -29,30 +28,24 @@ function [fx] = most (x, var)
 % -------------------------------------------------------------------------
 
 % Prevent near-zero values of Obukhov length
-
 if (abs(x) <= 0.1)
    x = 0.1;
 end
 
 % Evaluate psi for momentum at heights z2 and z1
-
 [psi_m_z2] = psi_m_monin_obukhov((var.z2-var.d)/x);
 [psi_m_z1] = psi_m_monin_obukhov((var.z1-var.d)/x);
 
 % Evaluate psi for scalars at heights z2 and z1
-
 [psi_c_z2] = psi_c_monin_obukhov((var.z2-var.d)/x);
 [psi_c_z1] = psi_c_monin_obukhov((var.z1-var.d)/x);
 
 % Calculate u* (m/s) and T* (K)
-
 ustar = (var.u2 - var.u1) * var.k / (log((var.z2-var.d)/(var.z1-var.d)) - (psi_m_z2 - psi_m_z1));
 tstar = (var.t2 - var.t1) * var.k / (log((var.z2-var.d)/(var.z1-var.d)) - (psi_c_z2 - psi_c_z1));
 
 % Calculate L (m)
-
 L = ustar^2 * var.t2 / (var.k * var.g * tstar);
 
 % Calculate change in L
-
 fx = x - L;
