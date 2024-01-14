@@ -2,7 +2,7 @@ function [fluxvar] = canopy_turbulence (dt, physcon, forcvar, surfvar, leafvar, 
 
 % Canopy turbulence, aeorodynamic conductances, and wind/temperature/water vapor
 % profiles using above- and within-canopy coupling with a roughness sublayer
-% (RSL) parameterization 
+% (RSL) parameterization
 
 % ------------------------------------------------------------------------------------
 % Input
@@ -112,7 +112,7 @@ fluxvar.Lc(p) = surfvar.hc(p) / (cd * surfvar.pai(p));
 % --- Calculate the Obukhov length
 
 % Calculate the Obukhov length (obu) for the current surface temperature
-% and surface vapor pressure using Harman & Finnigan (2007, 2008) roughness 
+% and surface vapor pressure using Harman & Finnigan (2007, 2008) roughness
 % sublayer (RSL) theory. Use the function "obukhov_function" to iterate obu
 % until the change in obu is less than tol.
 
@@ -124,7 +124,7 @@ func_name = 'obukhov_function'; % The function is the file obukhov_function.m
 % Solve for the Obukhov length. Do not use final returned value for obu.
 % Instead, use the value used to calculate u*
 
-[fluxvar, oburoot] = hybrid_root (func_name, physcon, forcvar, surfvar, fluxvar, obu0, obu1, tol);
+[fluxvar, oburoot] = root_hybrid (func_name, obu0, obu1, tol, physcon, forcvar, surfvar, fluxvar);
 fluxvar.obu(p) = fluxvar.obu_ustar(p);
 
 % --- Wind profile (m/s)
@@ -136,11 +136,11 @@ h_minus_d = surfvar.hc(p) - fluxvar.disp(p);
 [psi_m_rsl_hc] = psi_m_rsl (h_minus_d, h_minus_d, fluxvar.obu(p), fluxvar.c1m(p), fluxvar.c2);
 
 for ic = surfvar.ntop(p)+1:surfvar.nlev(p)
-   z_minus_d = surfvar.zs(p,ic) - fluxvar.disp(p);
-   [psi_m_zs] = psi_m_monin_obukhov (z_minus_d / fluxvar.obu(p));
-   [psi_m_rsl_zs] = psi_m_rsl (z_minus_d, h_minus_d, fluxvar.obu(p), fluxvar.c1m(p), fluxvar.c2);
-   psim = -psi_m_zs + psi_m_hc + psi_m_rsl_zs - psi_m_rsl_hc + physcon.vkc / fluxvar.beta(p);
-   fluxvar.wind(p,ic) = fluxvar.ustar(p) / physcon.vkc * (log(z_minus_d/h_minus_d) + psim);
+  z_minus_d = surfvar.zs(p,ic) - fluxvar.disp(p);
+  [psi_m_zs] = psi_m_monin_obukhov (z_minus_d / fluxvar.obu(p));
+  [psi_m_rsl_zs] = psi_m_rsl (z_minus_d, h_minus_d, fluxvar.obu(p), fluxvar.c1m(p), fluxvar.c2);
+  psim = -psi_m_zs + psi_m_hc + psi_m_rsl_zs - psi_m_rsl_hc + physcon.vkc / fluxvar.beta(p);
+  fluxvar.wind(p,ic) = fluxvar.ustar(p) / physcon.vkc * (log(z_minus_d/h_minus_d) + psim);
 end
 
 % Wind speed at top of canopy
@@ -152,8 +152,8 @@ fluxvar.uaf(p) = fluxvar.ustar(p) / fluxvar.beta(p);
 lm = 2 * fluxvar.beta(p)^3 * fluxvar.Lc(p);
 lm_over_beta = lm / fluxvar.beta(p);
 for ic = surfvar.nsoi(p)+1:surfvar.ntop(p)
-   fluxvar.wind(p,ic) = fluxvar.uaf(p) * exp((surfvar.zs(p,ic) - surfvar.hc(p)) / lm_over_beta);
-   fluxvar.wind(p,ic) = max(fluxvar.wind(p,ic), 0.1);
+  fluxvar.wind(p,ic) = fluxvar.uaf(p) * exp((surfvar.zs(p,ic) - surfvar.hc(p)) / lm_over_beta);
+  fluxvar.wind(p,ic) = max(fluxvar.wind(p,ic), 0.1);
 end
 
 % Wind speed at ground
@@ -169,27 +169,27 @@ h_minus_d = surfvar.hc(p) - fluxvar.disp(p);
 [psi_c_rsl_hc] = psi_c_rsl (h_minus_d, h_minus_d, fluxvar.obu(p), fluxvar.c1c(p), fluxvar.c2);
 
 for ic = surfvar.ntop(p)+1:surfvar.nlev(p)-1
-
-   % Lower height zs(i)
-
-   z_minus_d = surfvar.zs(p,ic) - fluxvar.disp(p);
-   [psi_c_zs] = psi_c_monin_obukhov (z_minus_d / fluxvar.obu(p));
-   [psi_c_rsl_zs] = psi_c_rsl (z_minus_d, h_minus_d, fluxvar.obu(p), fluxvar.c1c(p), fluxvar.c2);
-   psic1 = -psi_c_zs + psi_c_hc + psi_c_rsl_zs - psi_c_rsl_hc;
-
-   % Upper height zs(i+1)
-
-   z_minus_d = surfvar.zs(p,ic+1) - fluxvar.disp(p);
-   [psi_c_zs] = psi_c_monin_obukhov (z_minus_d / fluxvar.obu(p));
-   [psi_c_rsl_zs] = psi_c_rsl (z_minus_d, h_minus_d, fluxvar.obu(p), fluxvar.c1c(p), fluxvar.c2);
-   psic2 = -psi_c_zs + psi_c_hc + psi_c_rsl_zs - psi_c_rsl_hc;
-
-   % Conductance. Note that psic = psic2 - psic1 is equivalent to:
-   % -psi_c_z2 + psi_c_z1 + psi_c_rsl_z2 - psi_c_rsl_z1
-
-   psic = psic2 - psic1;
-   zlog = log((surfvar.zs(p,ic+1)-fluxvar.disp(p)) / (surfvar.zs(p,ic)-fluxvar.disp(p)));
-   fluxvar.ga_prof(p,ic) = forcvar.rhomol(p) * physcon.vkc * fluxvar.ustar(p) / (zlog + psic);
+  
+  % Lower height zs(i)
+  
+  z_minus_d = surfvar.zs(p,ic) - fluxvar.disp(p);
+  [psi_c_zs] = psi_c_monin_obukhov (z_minus_d / fluxvar.obu(p));
+  [psi_c_rsl_zs] = psi_c_rsl (z_minus_d, h_minus_d, fluxvar.obu(p), fluxvar.c1c(p), fluxvar.c2);
+  psic1 = -psi_c_zs + psi_c_hc + psi_c_rsl_zs - psi_c_rsl_hc;
+  
+  % Upper height zs(i+1)
+  
+  z_minus_d = surfvar.zs(p,ic+1) - fluxvar.disp(p);
+  [psi_c_zs] = psi_c_monin_obukhov (z_minus_d / fluxvar.obu(p));
+  [psi_c_rsl_zs] = psi_c_rsl (z_minus_d, h_minus_d, fluxvar.obu(p), fluxvar.c1c(p), fluxvar.c2);
+  psic2 = -psi_c_zs + psi_c_hc + psi_c_rsl_zs - psi_c_rsl_hc;
+  
+  % Conductance. Note that psic = psic2 - psic1 is equivalent to:
+  % -psi_c_z2 + psi_c_z1 + psi_c_rsl_z2 - psi_c_rsl_z1
+  
+  psic = psic2 - psic1;
+  zlog = log((surfvar.zs(p,ic+1)-fluxvar.disp(p)) / (surfvar.zs(p,ic)-fluxvar.disp(p)));
+  fluxvar.ga_prof(p,ic) = forcvar.rhomol(p) * physcon.vkc * fluxvar.ustar(p) / (zlog + psic);
 end
 
 % Special case for the top layer to the reference height
@@ -212,10 +212,10 @@ fluxvar.ga_prof(p,ic) = forcvar.rhomol(p) * physcon.vkc * fluxvar.ustar(p) / (zl
 % Within-canopy aerodynamic conductances
 
 for ic = surfvar.nsoi(p)+1:surfvar.ntop(p)-1
-   zl = surfvar.zs(p,ic) - surfvar.hc(p);
-   zu = surfvar.zs(p,ic+1) - surfvar.hc(p);
-   res = fluxvar.PrSc(p) / (fluxvar.beta(p) * fluxvar.ustar(p)) * (exp(-zl/lm_over_beta) - exp(-zu/lm_over_beta));
-   fluxvar.ga_prof(p,ic) = forcvar.rhomol(p) / res;
+  zl = surfvar.zs(p,ic) - surfvar.hc(p);
+  zu = surfvar.zs(p,ic+1) - surfvar.hc(p);
+  res = fluxvar.PrSc(p) / (fluxvar.beta(p) * fluxvar.ustar(p)) * (exp(-zl/lm_over_beta) - exp(-zu/lm_over_beta));
+  fluxvar.ga_prof(p,ic) = forcvar.rhomol(p) / res;
 end
 
 % Special case for top canopy layer: conductance from zs to hc
@@ -247,11 +247,11 @@ fluxvar.ga_prof(p,ic) = 1 / (1 / ga_below_hc + 1 / ga_above_hc);
 
 sumres = 1 / ga_above_hc;
 for ic = surfvar.ntop(p)+1:surfvar.nlev(p)
-   sumres = sumres + 1 / fluxvar.ga_prof(p,ic);
+  sumres = sumres + 1 / fluxvar.ga_prof(p,ic);
 end
 
 if (abs(1/sumres - fluxvar.gac(p)) > 1e-06)
-   error('canopy_turbulence: above-canopy aerodynamic conductance error')
+  error('canopy_turbulence: above-canopy aerodynamic conductance error')
 end
 
 % Aerodynamic conductance at ground
@@ -271,8 +271,8 @@ fluxvar.ga_prof(p,ic) = forcvar.rhomol(p) / res;
 % --- Limit resistances to < 500 s/m
 
 for ic = surfvar.nsoi(p):surfvar.nlev(p)
-   res = min (forcvar.rhomol(p)/fluxvar.ga_prof(p,ic), 500);
-   fluxvar.ga_prof(p,ic) = forcvar.rhomol(p) / res;
+  res = min (forcvar.rhomol(p)/fluxvar.ga_prof(p,ic), 500);
+  fluxvar.ga_prof(p,ic) = forcvar.rhomol(p) / res;
 end
 
 % --- Calculate within-canopy scalar profiles for temperature and vapor pressure

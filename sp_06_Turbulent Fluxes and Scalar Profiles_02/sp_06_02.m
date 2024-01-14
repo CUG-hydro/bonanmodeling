@@ -41,7 +41,6 @@ beta_neutral = 0.35;
 LcL = Lc/obu;
 
 % The unstable case is a quadratic equation for beta^2 at LcL
-
 if (LcL <= 0)
   a = 1;
   b = 16 * LcL * beta_neutral^4;
@@ -70,7 +69,6 @@ if (LcL > 0)
   beta_val = -(b+r)/(3*a) - (b^2 - 3*a*c)/(3*a*r);
   
   % Error check
-  
   y = beta_val^2 * LcL;
   fy = 1 + 5 * y;
   err = beta_val * fy - beta_neutral;
@@ -157,7 +155,6 @@ z0m = cval;
 
 % z0c - Use bisection to find z0c, which lies between aval and bval, and refine the
 % estimate until the difference is less than err
-
 aval = hc;
 bval = 0;
 

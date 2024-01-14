@@ -321,7 +321,6 @@ for p = 1:npts
 end
 
 % --- Atmospheric forcing at a reference height
-
 for p = 1:npts
 
    forcvar.pref(p) = 98620;               % Atmospheric pressure (Pa)
@@ -329,35 +328,28 @@ for p = 1:npts
    forcvar.tref(p) = 295.9349938964844;   % Air temperature at reference height (K)
 
    % Water vapor (mol/mol) using constant relative humidity
-
    relhum = 53.871;
    [esat, desat] = satvap (forcvar.tref(p)-physcon.tfrz);
    eref = (relhum / 100) * esat;
    forcvar.qref(p) = eref / forcvar.pref(p);
 
    % Specific humidity (kg/kg)
-
    qref_kg_kg = physcon.mmh2o / physcon.mmdry * eref / (forcvar.pref(p) - (1 - physcon.mmh2o/physcon.mmdry) * eref);
 
    % Potential temperature and virtual potential temperature (K)
-
    forcvar.thref(p) = forcvar.tref(p) + 0.0098 * forcvar.zref(p);
    forcvar.thvref(p) = forcvar.thref(p) * (1 + 0.61 * qref_kg_kg);
 
    % Molar density (mol/m3)
-
    forcvar.rhomol(p) = forcvar.pref(p) / (physcon.rgas * forcvar.tref(p));
 
    % Air density (kg/m3)
-
    rhoair = forcvar.rhomol(p) * physcon.mmdry * (1 - (1 - physcon.mmh2o/physcon.mmdry) * eref / forcvar.pref(p));
 
    % Molecular mass of air (kg/mol)
-
    forcvar.mmair(p) = rhoair / forcvar.rhomol(p);
 
    % Specific heat of air at constant pressure (J/mol/K)
-
    forcvar.cpair(p) = physcon.cpd * (1 + (physcon.cpw/physcon.cpd - 1) * qref_kg_kg) * forcvar.mmair(p);
 
 end
@@ -403,25 +395,23 @@ for p = 1:npts
       fluxvar.etair(p,ic) = 0;
       fluxvar.stair(p,ic) = 0;
    end
-
 end
 
 % --- Calculate fluxes and scalar profiles
-
 for p = 1:npts
    surfvar.p = p;
    [fluxvar] = canopy_turbulence (dt, physcon, forcvar, surfvar, leafvar, soilvar, fluxvar);
 end
 
 % --- Write profile output data
-
+fid = fopen('output.txt', 'w');
 p = 1;
 for ic = surfvar.nsoi(p):surfvar.nlev(p)
-   fprintf('%6.0f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f\n',ic-1,surfvar.zs(p,ic),surfvar.dpai(p,ic), ...
+   fprintf(fid, '%6.0f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f\n',ic-1,surfvar.zs(p,ic),surfvar.dpai(p,ic), ...
    fluxvar.wind(p,ic),fluxvar.tair(p,ic),fluxvar.qair(p,ic)*forcvar.pref(p), ...
-   fluxvar.tveg(p,ic,leafvar.isun),fluxvar.tveg(p,ic,leafvar.isha))
+   fluxvar.tveg(p,ic,leafvar.isun),fluxvar.tveg(p,ic,leafvar.isha));
 end
-
+fclose(fid);
 % --- Make graph profile output data
 
 p = 1;

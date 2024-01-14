@@ -1,4 +1,4 @@
-function [fluxvar, fx] = obukhov_function (physcon, forcvar, surfvar, fluxvar, x)
+function [fluxvar, fx] = obukhov_function (x, varargin)
 
 % Use Harman & Finnigan (2007, 2008) roughness sublayer (RSL) theory to obtain
 % the Obukhov length (obu). This is the function to solve for the Obukhov
@@ -40,15 +40,16 @@ function [fluxvar, fx] = obukhov_function (physcon, forcvar, surfvar, fluxvar, x
 %   fluxvar.obu         ! Value for Obukhov length (m)
 %   fx                  ! Change in Obukhov length (x - obu)
 % -------------------------------------------------------------------------
+if length(varargin) == 1 && iscell(varargin{1}); varargin = varargin{1}; end
+[physcon, forcvar, surfvar, fluxvar] = flatten(varargin);
 
 % --- Index for grid point to process
-
 p = surfvar.p;
 
 % --- Prevent near-zero values of Obukhov length
 
 if (abs(x) <= 0.1)
-   x = 0.1;
+  x = 0.1;
 end
 
 % --- Determine beta_val = u* / u(hc) for the current Obukhov length
@@ -62,46 +63,46 @@ beta_neutral = 0.35;
 LcL = fluxvar.Lc(p)/x;
 
 if (LcL <= 0)
-
-   % The unstable case is a quadratic equation for beta^2 at LcL
-
-   a = 1;
-   b = 16 * LcL * beta_neutral^4;
-   c = -beta_neutral^4;
-   beta_val = sqrt((-b + sqrt(b^2 - 4 * a * c)) / (2 * a));
-
-   % Error check
-
-   y = beta_val^2 * LcL;
-   fy = (1 - 16 * y)^(-0.25);
-   err = beta_val * fy - beta_neutral;
-   if (abs(err) > 1e-10)
-      error('obukhov_function: unstable case - error in beta')
-   end
-
+  
+  % The unstable case is a quadratic equation for beta^2 at LcL
+  
+  a = 1;
+  b = 16 * LcL * beta_neutral^4;
+  c = -beta_neutral^4;
+  beta_val = sqrt((-b + sqrt(b^2 - 4 * a * c)) / (2 * a));
+  
+  % Error check
+  
+  y = beta_val^2 * LcL;
+  fy = (1 - 16 * y)^(-0.25);
+  err = beta_val * fy - beta_neutral;
+  if (abs(err) > 1e-10)
+    error('obukhov_function: unstable case - error in beta')
+  end
+  
 else
-
-   % The stable case is a cubic equation for beta at LcL
-
-   a = 5 * LcL;
-   b = 0;
-   c = 1;
-   d = -beta_neutral;
-   q = (2*b^3 - 9*a*b*c + 27*(a^2)*d)^2 - 4*(b^2 - 3*a*c)^3;
-   q = sqrt(q);
-   r = 0.5 * (q + 2*b^3 - 9*a*b*c + 27*(a^2)*d);
-   r = r^(1/3);
-   beta_val = -(b+r)/(3*a) - (b^2 - 3*a*c)/(3*a*r);
-
-   % Error check
-
-   y = beta_val^2 * LcL;
-   fy = 1 + 5 * y;
-   err = beta_val * fy - beta_neutral;
-   if (abs(err) > 1e-10)
-      error('obukhov_function: stable case - error in beta')
-   end
-
+  
+  % The stable case is a cubic equation for beta at LcL
+  
+  a = 5 * LcL;
+  b = 0;
+  c = 1;
+  d = -beta_neutral;
+  q = (2*b^3 - 9*a*b*c + 27*(a^2)*d)^2 - 4*(b^2 - 3*a*c)^3;
+  q = sqrt(q);
+  r = 0.5 * (q + 2*b^3 - 9*a*b*c + 27*(a^2)*d);
+  r = r^(1/3);
+  beta_val = -(b+r)/(3*a) - (b^2 - 3*a*c)/(3*a*r);
+  
+  % Error check
+  
+  y = beta_val^2 * LcL;
+  fy = 1 + 5 * y;
+  err = beta_val * fy - beta_neutral;
+  if (abs(err) > 1e-10)
+    error('obukhov_function: stable case - error in beta')
+  end
+  
 end
 
 % Place limits on beta
