@@ -1,8 +1,7 @@
 function [soilvar] = soil_thermal_properties (physcon, soilvar)
-
-% Calculate soil thermal conductivity and heat capacity
-
 % ------------------------------------------------------
+%% Calculate soil thermal conductivity and heat capacity
+% 
 % Input
 %   physcon.hfus             ! Heat of fusion for water at 0 C (J/kg)
 %   physcon.tfrz             ! Freezing point of water (K)
@@ -12,6 +11,7 @@ function [soilvar] = soil_thermal_properties (physcon, soilvar)
 %   physcon.cvice            ! Heat capacity of ice (J/m3/K)
 %   physcon.rhowat           ! Density of water (kg/m3)
 %   physcon.rhoice           ! Density of ice (kg/m3)
+
 %   soilvar.method           ! Use excess heat or apparent heat capacity for phase change
 %   soilvar.soil_texture     ! Soil texture class
 %   soilvar.sand             ! Percent sand
@@ -28,7 +28,6 @@ function [soilvar] = soil_thermal_properties (physcon, soilvar)
 % ------------------------------------------------------
 
 for i = 1:soilvar.nsoi
-
    % --- Soil texture to process
    k = soilvar.soil_texture;
 
@@ -70,7 +69,6 @@ for i = 1:soilvar.nsoi
    tksat_f = tksol^(1-soilvar.watsat(k)) * physcon.tkice^soilvar.watsat(k);
 
    % --- Kersten number and unfrozen and frozen values
-
    if (soilvar.sand(k) < 50)
       ke_u = log10(max(s,0.1)) + 1;
    else
@@ -122,5 +120,4 @@ for i = 1:soilvar.nsoi
          soilvar.tk(i) = tkf;
       end
    end
-
 end

@@ -1,5 +1,4 @@
 function [soilvar] = soil_temperature (physcon, soilvar, tsurf, dt)
-
 % Use an implicit formulation with the surface boundary condition specified
 % as the surface temperature to solve for soil temperatures at time n+1.
 %
@@ -36,6 +35,7 @@ function [soilvar] = soil_temperature (physcon, soilvar, tsurf, dt)
 % Input
 %   tsurf                   ! Surface temperature (K)
 %   dt                      ! Time step (s)
+
 %   soilvar.method          ! Use excess heat or apparent heat capacity for phase change
 %   soilvar.nsoi            ! Number of soil layers
 %   soilvar.z               ! Soil depth (m)
@@ -56,53 +56,54 @@ function [soilvar] = soil_temperature (physcon, soilvar, tsurf, dt)
 % ------------------------------------------------------
 
 % --- Save current soil temperature for energy conservation check
-
-for i = 1:soilvar.nsoi
-   tsoi0(i) = soilvar.tsoi(i);
-end
+tsoi0 = soilvar.tsoi; 
 
 % --- Thermal conductivity at interface (W/m/K)
+nsoi = soilvar.nsoi;
+tk_plus_onehalf = zeros(1, nsoi-1);
 
+z = soilvar.z;
+z_plus_onehalf = soilvar.z_plus_onehalf;
+tk = soilvar.tk;
+
+% --- Thermal conductivity at interface (W/m/K)
 for i = 1:soilvar.nsoi-1
-   tk_plus_onehalf(i) = soilvar.tk(i) * soilvar.tk(i+1) * (soilvar.z(i)-soilvar.z(i+1)) / ...
-   (soilvar.tk(i)*(soilvar.z_plus_onehalf(i)-soilvar.z(i+1)) + soilvar.tk(i+1)*(soilvar.z(i)-soilvar.z_plus_onehalf(i)));
+   tk_plus_onehalf(i) = tk(i) * tk(i+1) * (z(i)-z(i+1)) / ...
+   (tk(i)*(z_plus_onehalf(i)-z(i+1)) + tk(i+1)*(z(i) - z_plus_onehalf(i))); % Eq. 5.16
 end
 
-% --- Set up tridiagonal matrix
-
+%% --- Set up tridiagonal matrix
 % Top soil layer with tsurf as boundary condition
-
 i = 1;
 m = soilvar.cv(i) * soilvar.dz(i) / dt;
+
 a(i) = 0;
 c(i) = -tk_plus_onehalf(i) / soilvar.dz_plus_onehalf(i);
-b(i) = m - c(i) + soilvar.tk(i) / (0 - soilvar.z(i));
-d(i) = m * soilvar.tsoi(i) + soilvar.tk(i) / (0 - soilvar.z(i)) * tsurf;
+b(i) = m - c(i) + tk(i) / (0 - z(i));
+d(i) = m * tsoi0(i) + tk(i) / (0 - z(i)) * tsurf;
 
 % Layers 2 to nsoi-1
-
 for i = 2:soilvar.nsoi-1
    m = soilvar.cv(i) * soilvar.dz(i) / dt;
    a(i) = -tk_plus_onehalf(i-1) / soilvar.dz_plus_onehalf(i-1);
    c(i) = -tk_plus_onehalf(i) / soilvar.dz_plus_onehalf(i);
    b(i) = m - a(i) - c(i);
-   d(i) = m * soilvar.tsoi(i);
+   d(i) = m * tsoi0(i);
 end
 
 % Bottom soil layer with zero heat flux
-
 i = soilvar.nsoi;
 m = soilvar.cv(i) * soilvar.dz(i) / dt;
 a(i) = -tk_plus_onehalf(i-1) / soilvar.dz_plus_onehalf(i-1);
 c(i) = 0;
 b(i) = m - a(i);
-d(i) = m * soilvar.tsoi(i);
+d(i) = m * tsoi0(i);
 
 % --- Solve for soil temperature
-[soilvar.tsoi] = tridiagonal_solver (a, b, c, d, soilvar.nsoi);
+soilvar.tsoi = tridiagonal_solver (a, b, c, d, soilvar.nsoi);
 
 % --- Derive energy flux into soil (W/m2)
-soilvar.gsoi = soilvar.tk(1) * (tsurf - soilvar.tsoi(1)) / (0 - soilvar.z(1));
+soilvar.gsoi = tk(1) * (tsurf - soilvar.tsoi(1)) / (0 - z(1));
 
 % --- Phase change for soil layers undergoing freezing of thawing
 switch soilvar.method
@@ -115,7 +116,6 @@ switch soilvar.method
    % excess or deficit needed to change temperature to the freezing point.
    % The variable hfsoi is returned as the energy flux from phase change (W/m2).
    [soilvar] = phase_change (physcon, soilvar, dt);
-
 end
 
 %% --- Check for energy conservation
