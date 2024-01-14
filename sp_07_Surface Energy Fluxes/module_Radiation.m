@@ -1,5 +1,4 @@
 classdef module_Radiation
-  
   %% module_Radiation
   %
   %% Example:

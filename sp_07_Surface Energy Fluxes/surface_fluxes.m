@@ -88,8 +88,8 @@ end
 % Solve for the Obukhov length
 % Ta_pot = forcvar.thref; % ! Potential temperature at reference height (K)
 % Ta     = fluxvar.tsrf;  % ! Surface temperature (K)
-
-[fluxvar, ~] = hybrid_root (func_name, physcon, forcvar, surfvar, fluxvar, obu0, obu1, tol); % oburoot
+[fluxvar, ~] = root_hybrid(func_name, obu0, obu1, tol, ...
+  physcon, forcvar, surfvar, fluxvar); % oburoot
 
 % Uncomment this line to use MOST or RSL for neutral conditions
 % [fluxvar, dummy] = most (physcon, forcvar, surfvar, fluxvar, -inf);

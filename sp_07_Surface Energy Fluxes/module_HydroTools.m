@@ -4,7 +4,7 @@ classdef module_HydroTools
   properties (Constant)
   end
   
-  methods (Static)    
+  methods (Static)
     function [phi_c] = phi_c_monin_obukhov (x)
       % --- Evaluate the Monin-Obukhov phi function for scalars at x
       if (x < 0)
@@ -101,8 +101,7 @@ classdef module_HydroTools
     end
     
     
-    function [fluxvar, fx] = most (physcon, forcvar, surfvar, fluxvar, x)
-      
+    function [fluxvar, fx] = most (x, varargin)
       % Use Monin-Obukhov similarity theory to obtain the Obukhov length (obu).
       % This is the function to solve for the Obukhov length. For the current
       % estimate of the Obukhov length (x), calculate u*, T*, and q* and then
@@ -134,11 +133,12 @@ classdef module_HydroTools
       %   fluxvar.obu        ! Obukhov length (m)
       %   fx                 ! Change in Obukhov length (x - obu)
       % -------------------------------------------------------------------------
+      if length(varargin) == 1 && iscell(varargin{1}); varargin = varargin{1}; end
+      [physcon, forcvar, ~, fluxvar] = flatten(varargin);
+      % [physcon, forcvar, surfvar, fluxvar] = flatten(varargin);
       
       % --- Prevent near-zero values of the Obukhov length
-      if (abs(x) <= 0.1)
-        x = 0.1;
-      end
+      if (abs(x) <= 0.1); x = 0.1; end
       
       % --- Calculate z-d at the reference height, because this is used many times
       z_minus_d = forcvar.zref - fluxvar.disp;
@@ -154,7 +154,6 @@ classdef module_HydroTools
       psic = -psi_c_zref + psi_c_z0c;
       
       % --- Calculate u* (m/s), T* (K), q* (mol/mol), and Tv* (K)
-      
       zlog_m = log(z_minus_d / fluxvar.z0m);
       zlog_c = log(z_minus_d / fluxvar.z0c);
       
@@ -170,11 +169,5 @@ classdef module_HydroTools
       fx = x - fluxvar.obu;
     end
     
-    % function obj = untitled(inputArg1,inputArg2)
-    %   obj.Property1 = inputArg1 + inputArg2;
-    % end
-    % function outputArg = method1(obj,inputArg)
-    %   outputArg = obj.Property1 + inputArg;
-    % end
   end
 end

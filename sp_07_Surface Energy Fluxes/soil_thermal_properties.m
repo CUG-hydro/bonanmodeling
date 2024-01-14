@@ -71,7 +71,7 @@ for i = 1:soilvar.nsoi
   if (soilvar.sand(k) < 50)
     ke_u = log10(max(s,0.1)) + 1;
   else
-    ke_u = 0.7 * log10(max(s,0.05)) + 1;
+    ke_u = 0.7 * log10(max(s, 0.05)) + 1;
   end
   ke_f = s;
   

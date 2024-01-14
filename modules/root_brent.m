@@ -1,5 +1,4 @@
-function [fluxvar, root] = brent_root (func, physcon, forcvar, surfvar, fluxvar, xa, xb, tol)
-
+function [fluxvar, root] = root_brent (func, xa, xb, tol, varargin)
 % Use Brent's method to find the root of a function, which is known to exist between
 % xa and xb. The root is updated until its accuracy is tol. func is the name of the
 % function to solve. The variable root is returned as the root of the function. The
@@ -12,20 +11,23 @@ function [fluxvar, root] = brent_root (func, physcon, forcvar, surfvar, fluxvar,
 % input arguments. It also calculates values for variables in the fluxvar structure
 % so this must be returned in the function call as an output argument. The matlab
 % function feval evaluates func.
+% 
+%% INPUTS
+% - `varargin`: other arguments to be passed to `func`
+if length(varargin) == 1; varargin = varargin{1}; end
+% physcon, forcvar, surfvar, fluxvar, 
 
 % --- Evaluate func at xa and xb and make sure the root is bracketed
-
 a = xa;
 b = xb;
-[fluxvar, fa] = feval(func, physcon, forcvar, surfvar, fluxvar, a);
-[fluxvar, fb] = feval(func, physcon, forcvar, surfvar, fluxvar, b);
+[fluxvar, fa] = feval(func, a, varargin);
+[fluxvar, fb] = feval(func, b, varargin);
 
-if ((fa > 0 & fb > 0) | (fa < 0 & fb < 0))
-   error('brent_root error: root must be bracketed')
+if ((fa > 0 && fb > 0) || (fa < 0 && fb < 0))
+   error('root_brent error: root must be bracketed')
 end
 
 % --- Initialize iteration
-
 itmax = 50;      % Maximum number of iterations
 eps1 = 1e-08;    % Relative error tolerance
 
@@ -33,9 +35,8 @@ c = b;
 fc = fb;
 
 % --- Iterative root calculation
-
 for iter = 1:itmax
-   if ((fb > 0 & fc > 0) | (fb < 0 & fc < 0))
+   if ((fb > 0 && fc > 0) || (fb < 0 && fc < 0))
       c = a;
       fc = fa;
       d = b - a;
@@ -54,11 +55,11 @@ for iter = 1:itmax
 
    % Check to end iteration
 
-   if (abs(xm) <= tol1 | fb == 0)
+   if (abs(xm) <= tol1 || fb == 0)
       break
    end
 
-   if (abs(e) >= tol1 & abs(fa) > abs(fb))
+   if (abs(e) >= tol1 && abs(fa) > abs(fb))
       s = fb / fa;
       if (a == c)
          p = 2 * xm * s;
@@ -95,19 +96,16 @@ for iter = 1:itmax
          b = b - abs(tol1);
       end
    end
-   [fluxvar, fb] = feval(func, physcon, forcvar, surfvar, fluxvar, b);
+   [fluxvar, fb] = feval(func, b, varargin);
 
    % Check to end iteration
-
    if (fb == 0)
       break
    end
 
    % Check to see if failed to converge
-
    if (iter == itmax)
-      error('brent_root error: Maximum number of interations exceeded')
+      error('root_brent error: Maximum number of interations exceeded')
    end
-
 end
 root = b;

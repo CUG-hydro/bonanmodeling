@@ -1,4 +1,4 @@
-function [fluxvar, fx] = rsl (physcon, forcvar, surfvar, fluxvar, x)
+function [fluxvar, fx] = rsl (x, varargin)
 % Use Harman & Finnigan (2007, 2008) roughness sublayer (RSL) theory to obtain
 % the Obukhov length (obu). This is the function to solve for the Obukhov
 % length. For the current estimate of the Obukhov length (x), calculate
@@ -34,6 +34,8 @@ function [fluxvar, fx] = rsl (physcon, forcvar, surfvar, fluxvar, x)
 %   fluxvar.obu         ! Obukhov length (m)
 %   fx                  ! Change in Obukhov length (x - obu)
 % -------------------------------------------------------------------------
+if length(varargin) == 1 && iscell(varargin{1}); varargin = varargin{1}; end
+[physcon, forcvar, surfvar, fluxvar] = flatten(varargin);
 
 % --- Prevent near-zero values of Obukhov length
 if (abs(x) <= 0.1)

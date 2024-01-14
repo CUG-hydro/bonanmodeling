@@ -109,10 +109,10 @@ ntim = round(86400/dt);
 %% 30天之后的稳态
 for j = 1:nday
   fprintf('day = %6.0f\n',j)
-
+  
   for i = 1:ntim
     hour = i * (dt/86400 * 24); % Hour of day (0 to 24)
-
+    
     % Air temperature (K): use a sine wave with max (tmean + 1/2 trange) at 1400
     % and min (tmean - 1/2 trange) at 0200
     forcvar.tref = tmean + 0.5 * trange * sin(2*pi/24 * (hour-8)) + physcon.tfrz; % Ta_ref
@@ -230,4 +230,4 @@ ylabel('Flux (W m^{-2})')
 legend('R_n','H','\lambdaE','G','g_{ac}*100','Location','northwest')
 grid on;
 
-saveas(gcf,'Figure7_Surface_Energy_Fluxes.png')
+% saveas(gcf,'Figure7_Surface_Energy_Fluxes.png')

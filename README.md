@@ -12,6 +12,13 @@ Matlab, type "sp_02_01" to run the program. All directories are similarly
 structured, but may have additional files. Type "sp_xx_yy" to execute the
 programs.
 
+
+# Usage
+
+```matlab
+addpath ./modules
+```
+
 # References
 
 > 1. Bonan, G. (2019). Climate Change and Terrestrial Ecosystem Modeling (Issue May).

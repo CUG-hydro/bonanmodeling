@@ -4,9 +4,9 @@ function [soilvar] = soil_temperature (physcon, soilvar, tsurf, dt)
 %
 % Calculate soil temperatures as:
 %
-%      dT   d     dT 
+%      dT   d     dT
 %   cv -- = -- (k --)
-%      dt   dz    dz 
+%      dt   dz    dz
 %
 % where: T = temperature (K)
 %        t = time (s)
@@ -14,7 +14,7 @@ function [soilvar] = soil_temperature (physcon, soilvar, tsurf, dt)
 %        cv = volumetric heat capacity (J/m3/K)
 %        k = thermal conductivity (W/m/K)
 %
-% Set up a tridiagonal system of equations to solve for T at time n+1, 
+% Set up a tridiagonal system of equations to solve for T at time n+1,
 % where the temperature equation for layer i is
 %
 %   d_i = a_i [T_i-1] n+1 + b_i [T_i] n+1 + c_i [T_i+1] n+1
@@ -35,9 +35,7 @@ function [soilvar] = soil_temperature (physcon, soilvar, tsurf, dt)
 % Input
 %   tsurf                   ! Surface temperature (K)
 %   dt                      ! Time step (s)
-
 %   soilvar.method          ! Use excess heat or apparent heat capacity for phase change
-
 %   soilvar.nsoi            ! Number of soil layers
 %   soilvar.z               ! Soil depth (m)
 %   soilvar.z_plus_onehalf  ! Soil depth (m) at i+1/2 interface between layers i and i+1

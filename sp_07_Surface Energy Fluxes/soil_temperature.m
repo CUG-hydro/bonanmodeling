@@ -58,41 +58,44 @@ function [soilvar, fluxvar, bucket] = soil_temperature (physcon, soilvar, fluxva
 
 % --- Save current soil temperature
 tsoi0 = soilvar.tsoi;
-% for i = 1:soilvar.nsoi
-%    tsoi0(i) = soilvar.tsoi(i);
-% end
+
+nsoi = soilvar.nsoi;
+tk_plus_onehalf = zeros(1, nsoi-1);
+
+z = soilvar.z;
+z_plus_onehalf = soilvar.z_plus_onehalf;
+dz_plus_onehalf = soilvar.dz_plus_onehalf;
+tk = soilvar.tk;
 
 % --- Thermal conductivity at interface (W/m/K)
-tk_plus_onehalf = zeros(1, soilvar.nsoi - 1);
-
 for i = 1:soilvar.nsoi-1
-  tk_plus_onehalf(i) = soilvar.tk(i) * soilvar.tk(i+1) * (soilvar.z(i)-soilvar.z(i+1)) / ...
-    (soilvar.tk(i)*(soilvar.z_plus_onehalf(i) - soilvar.z(i+1)) + soilvar.tk(i+1)*(soilvar.z(i) - soilvar.z_plus_onehalf(i)));
+  tk_plus_onehalf(i) = tk(i) * tk(i+1) * (z(i)-z(i+1)) / ...
+    (tk(i)*(z_plus_onehalf(i)-z(i+1)) + tk(i+1)*(z(i) - z_plus_onehalf(i))); % Eq. 5.16
 end
 
 %% --- Set up tridiagonal matrix
 % Top soil layer
 i = 1;
 a(i) = 0;
-c(i) = -tk_plus_onehalf(i) / soilvar.dz_plus_onehalf(i);
+c(i) = -tk_plus_onehalf(i) / dz_plus_onehalf(i);
 b(i) = soilvar.cv(i) * soilvar.dz(i) / dt - c(i) - df0;
-d(i) = -tk_plus_onehalf(i) * (soilvar.tsoi(i) - soilvar.tsoi(i+1)) / soilvar.dz_plus_onehalf(i) + f0;
+d(i) = -tk_plus_onehalf(i) * (tsoi0(i) - tsoi0(i+1)) / dz_plus_onehalf(i) + f0;
 
 % Layers 2 to nsoi-1
 for i = 2:soilvar.nsoi-1
-  a(i) = -tk_plus_onehalf(i-1) / soilvar.dz_plus_onehalf(i-1);
-  c(i) = -tk_plus_onehalf(i) / soilvar.dz_plus_onehalf(i);
+  a(i) = -tk_plus_onehalf(i-1) / dz_plus_onehalf(i-1);
+  c(i) = -tk_plus_onehalf(i) / dz_plus_onehalf(i);
   b(i) = soilvar.cv(i) * soilvar.dz(i) / dt - a(i) - c(i);
-  d(i) = tk_plus_onehalf(i-1) * (soilvar.tsoi(i-1) - soilvar.tsoi(i)) / soilvar.dz_plus_onehalf(i-1) ...
-    - tk_plus_onehalf(i) * (soilvar.tsoi(i) - soilvar.tsoi(i+1)) / soilvar.dz_plus_onehalf(i);
+  d(i) = tk_plus_onehalf(i-1) * (tsoi0(i-1) - tsoi0(i)) / dz_plus_onehalf(i-1) ...
+    - tk_plus_onehalf(i) * (tsoi0(i) - tsoi0(i+1)) / dz_plus_onehalf(i);
 end
 
 % Bottom soil layer
 i = soilvar.nsoi;
-a(i) = -tk_plus_onehalf(i-1) / soilvar.dz_plus_onehalf(i-1);
+a(i) = -tk_plus_onehalf(i-1) / dz_plus_onehalf(i-1);
 c(i) = 0;
 b(i) = soilvar.cv(i) * soilvar.dz(i) / dt - a(i);
-d(i) = tk_plus_onehalf(i-1) * (soilvar.tsoi(i-1) - soilvar.tsoi(i)) / soilvar.dz_plus_onehalf(i-1);
+d(i) = tk_plus_onehalf(i-1) * (tsoi0(i-1) - tsoi0(i)) / dz_plus_onehalf(i-1);
 
 %% --- Begin tridiagonal solution: forward sweep for layers N to 1
 % Bottom soil layer
@@ -112,7 +115,7 @@ i = 1;
 num = d(i) - c(i) * f(i+1);
 den = b(i) - c(i) * e(i+1);
 
-tsoi_test = soilvar.tsoi(i) + num / den;
+tsoi_test = tsoi0(i) + num / den;
 % --- Surface temperature with adjustment for snow melt
 
 % Potential melt rate based on temperature above freezing
@@ -130,7 +133,6 @@ fluxvar.gsno = bucket.snow_melt * physcon.hfus;
 % Update temperature - If there is no snow melt, tsoi(1) = tsoi_test (as above).
 % While snow is melting at the potential rate, tsoi(1) = tfrz. If snow melt is
 % less than the potential rate, tsoi(1) > tfrz and < tsoi_test.
-
 soilvar.tsoi(i) = soilvar.tsoi(i) + (num - fluxvar.gsno) / den;
 dtsoi(i) = soilvar.tsoi(i) - tsoi0(i);
 

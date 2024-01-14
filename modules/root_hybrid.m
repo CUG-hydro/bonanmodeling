@@ -1,4 +1,4 @@
-function [fluxvar, root] = hybrid_root (func, physcon, forcvar, surfvar, fluxvar, xa, xb, tol)
+function [fluxvar, root] = root_hybrid (func, xa, xb, tol, varargin)
 % Solve for the root of a function using the secant and Brent's methods given
 % initial estimates xa and xb. The root is updated until its accuracy is tol.
 % func is the name of the function to solve. The variable root is returned as
@@ -12,9 +12,12 @@ function [fluxvar, root] = hybrid_root (func, physcon, forcvar, surfvar, fluxvar
 % so this must be returned in the function call as an output argument. The matlab
 % function feval evaluates func.
 
+% physcon, forcvar, surfvar, fluxvar
+if length(varargin) == 1; varargin = varargin{1}; end
+
 % --- Evaluate func at xa and see if this is the root
 x0 = xa;
-[fluxvar, f0] = feval(func, physcon, forcvar, surfvar, fluxvar, x0);
+[fluxvar, f0] = feval(func, x0, varargin);
 if (f0 == 0)
   root = x0;
   return
@@ -22,7 +25,7 @@ end
 
 % --- Evaluate func at xb and see if this is the root
 x1 = xb;
-[fluxvar, f1] = feval(func, physcon, forcvar, surfvar, fluxvar, x1);
+[fluxvar, f1] = feval(func, x1, varargin);
 if (f1 == 0)
   root = x1;
   return
@@ -53,7 +56,7 @@ for iter = 1:itmax
   x0 = x1;
   f0 = f1;
   x1 = x;
-  [fluxvar, f1] = feval(func, physcon, forcvar, surfvar, fluxvar, x1);
+  [fluxvar, f1] = feval(func, x1, varargin);
   if (f1 < minf)
     minx = x1;
     minf = f1;
@@ -62,14 +65,14 @@ for iter = 1:itmax
   % If a root zone is found, use Brent's method for a robust backup strategy
   % and exit the iteration
   if (f1 * f0 < 0)
-    [fluxvar, x] = brent_root (func, physcon, forcvar, surfvar, fluxvar, x0, x1, tol);
+    [fluxvar, x] = root_brent (func, x0, x1, tol, varargin);
     x0 = x;
     break
   end
   
   % In case of failing to converge within itmax iterations stop at the minimum function
   if (iter == itmax)
-    [fluxvar, f1] = feval(func, physcon, forcvar, surfvar, fluxvar, minx);
+    [fluxvar, f1] = feval(func, minx, varargin);
     x0 = minx;
   end
 end
