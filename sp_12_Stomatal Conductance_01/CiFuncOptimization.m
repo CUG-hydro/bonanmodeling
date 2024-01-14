@@ -1,5 +1,4 @@
 function [flux] = CiFuncOptimization (atmos, leaf, flux)
-
 % Calculate leaf photosynthesis for a specified stomatal conductance.
 % Then calculate Ci from the diffusion equation. 
 %
@@ -149,13 +148,11 @@ else
 end
 
 % --- Net assimilation as the minimum or co-limited rate
-
 if (leaf.colim == 1) % Use co-limitation
 
    % First co-limit Ac and Aj. Ai is the intermediate co-limited photosynthesis
    % rate found by solving the polynomial: aquad*Ai^2 + bquad*Ai + cquad = 0 for Ai.
    % Correct solution is the smallest of the two roots.
-
    if (leaf.c3psn == 1)
       aquad = leaf.colim_c3;
    else
@@ -170,7 +167,6 @@ if (leaf.colim == 1) % Use co-limitation
    % Now co-limit again using Ap, but only for C4 plants. Solve the polynomial:
    % aquad*Ag^2 + bquad*Ag + cquad = 0 for Ag. Correct solution is the smallest
    % of the two roots. Ignore the product-limited rate For C3 plants.
-
    if (leaf.c3psn == 0)
       aquad = leaf.colim_c4b;
       bquad = -(ai + flux.ap);
@@ -181,7 +177,6 @@ if (leaf.colim == 1) % Use co-limitation
    else
       flux.ag = ai;
    end
-
 elseif (leaf.colim == 0) % No co-limitation
 
    if (leaf.c3psn == 1)
@@ -189,7 +184,6 @@ elseif (leaf.colim == 0) % No co-limitation
    else
       flux.ag = min(flux.ac, flux.aj, flux.ap); % C4
    end
-
 end
 
 % Prevent photosynthesis from ever being negative
@@ -204,10 +198,8 @@ flux.ag = max(flux.ag, 0);
 flux.an = flux.ag - flux.rd;
 
 % --- CO2 at leaf surface
-
 flux.cs = atmos.co2air - flux.an / flux.gbc;
 flux.cs = max(flux.cs, 1);
 
 % --- Intercelluar CO2
-
 flux.ci = atmos.co2air - flux.an / gleaf;

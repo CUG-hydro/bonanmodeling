@@ -193,3 +193,8 @@ fileID = fopen('data2.txt','w');
 fprintf(fileID,'%12s %12s\n','hour','infil');
 fprintf(fileID,'%12.5f %12.5f\n', B);
 fclose(fileID);
+
+% infiltration (cm) =   11.810 
+% drainage (cm) =    0.105 
+% storage (cm) =   11.705 
+% mass balance error (percent) =    0.003 
