@@ -1,6 +1,10 @@
 % Supplemental program 7.1
 clear, clc, close all
-Constant;
+import module_Radiation.*
+import module_HydroTools.*
+import module_Ipaper.*
+
+solcon = 1364;                      % Solar constant (W/m2)
 
 % --- Model run control parameters
 nday = 30;                          % Number of days to simulate, repeating the same diurnal cycle
@@ -21,10 +25,10 @@ forcvar.uref = 3.0;       % Wind speed at reference height (m/s)
 forcvar.pref = 101325;    % Atmospheric pressure (Pa)
 forcvar.rain = 0.0;       % Rainfall (kg H2O/m2/s)
 forcvar.snow = 0.0;       % Snowfall (kg H2O/m2/s)
+% [Ta, DRT, RH, U, P, RAIN, SNOW] = textread('forcing.txt','%f %f %f %f %f %f %f');
 
 doy = 182.0;              % Day of year (1 to 365) for solar radiation
 lat = 40.0 * pi/180;      % Latitude (degrees -> radians) for solar radiation
-solcon = 1364.0;          % Solar constant (W/m2)
 
 % --- Site characteristics
 vis = 1; nir = 2;               % Waveband indices for visible and near-infrared
@@ -88,7 +92,7 @@ end
 
 % Initial surface temperature (K) and vapor pressure (Pa)
 fluxvar.tsrf = soilvar.tsoi(1);
-[esat, desat] = satvap (fluxvar.tsrf-physcon.tfrz);
+[esat, desat] = satvap (fluxvar.tsrf - physcon.tfrz);
 fluxvar.esrf = esat;
 
 % Bucket model snow and soil water (kg H2O/m2)
@@ -102,16 +106,16 @@ bucket.soil_water = bucket.soil_water_max;
 dt = 1800;    % Time step (seconds)
 ntim = round(86400/dt);
 
+%% 30天之后的稳态
 for j = 1:nday
   fprintf('day = %6.0f\n',j)
 
   for i = 1:ntim
-    % Hour of day (0 to 24)
-    hour = i * (dt/86400 * 24);
-    
+    hour = i * (dt/86400 * 24); % Hour of day (0 to 24)
+
     % Air temperature (K): use a sine wave with max (tmean + 1/2 trange) at 1400
     % and min (tmean - 1/2 trange) at 0200
-    forcvar.tref = tmean + 0.5 * trange * sin(2*pi/24 * (hour-8)) + physcon.tfrz;
+    forcvar.tref = tmean + 0.5 * trange * sin(2*pi/24 * (hour-8)) + physcon.tfrz; % Ta_ref
     
     % Vapor pressure (Pa) using constant relative humidity
     [esat, desat] = satvap (forcvar.tref-physcon.tfrz);
@@ -125,18 +129,22 @@ for j = 1:nday
     % forcvar.rhoair  ! Air density at reference height (kg/m3)
     % forcvar.mmair   ! Molecular mass of air at reference height (kg/mol)
     % forcvar.cpair   ! Specific heat of air at constant pressure, at reference height (J/mol/K)
+    [forcvar.cpair, forcvar.thref, forcvar.thvref, forcvar.mmair, forcvar.rhomol] = ...
+      cal_Cp(forcvar.tref, forcvar.eref, forcvar.pref, forcvar.zref);
     
-    forcvar.thref =  forcvar.tref + 0.0098 * forcvar.zref;
-    forcvar.qref = physcon.mmh2o / physcon.mmdry * forcvar.eref / ...
-      (forcvar.pref - (1 - physcon.mmh2o/physcon.mmdry) * forcvar.eref);
-    forcvar.thvref = forcvar.thref * (1 + 0.61 * forcvar.qref);
-    forcvar.rhomol = forcvar.pref / (physcon.rgas * forcvar.tref);
-    forcvar.rhoair = forcvar.rhomol * physcon.mmdry * ...
-      (1 - (1 - physcon.mmh2o/physcon.mmdry) * forcvar.eref / forcvar.pref);
-    forcvar.mmair = forcvar.rhoair / forcvar.rhomol;
-    forcvar.cpair = physcon.cpd * (1 + (physcon.cpw/physcon.cpd - 1) * forcvar.qref);     % J/kg/K
-    forcvar.cpair = forcvar.cpair * forcvar.mmair;                                        % J/mol/K
+    % forcvar.thref =  forcvar.tref + 0.0098 * forcvar.zref;
+    % forcvar.qref = physcon.mmh2o / physcon.mmdry * forcvar.eref / ...
+    %   (forcvar.pref - (1 - physcon.mmh2o/physcon.mmdry) * forcvar.eref);
+    % forcvar.thvref = forcvar.thref * (1 + 0.61 * forcvar.qref);
+    % forcvar.rhomol = forcvar.pref / (physcon.rgas * forcvar.tref);
+    % forcvar.rhoair = forcvar.rhomol * physcon.mmdry * ...
+    %   (1 - (1 - physcon.mmh2o / physcon.mmdry) * forcvar.eref / forcvar.pref);
+    % forcvar.mmair = forcvar.rhoair / forcvar.rhomol;
+    % forcvar.cpair = physcon.cpd * (1 + (physcon.cpw/physcon.cpd - 1) * forcvar.qref);     % J/kg/K
+    % forcvar.cpair = forcvar.cpair * forcvar.mmair;                                        % J/mol/K
     
+    %% 计算Cp
+
     % Solar radiation (W/m2)
     % doy        ! Day of year (1 to 365)
     % lat        ! Latitude (radians)
@@ -146,13 +154,17 @@ for j = 1:nday
     % coszen     ! Cosine of solar zenith angle
     % rv         ! Radius vector: Brock, T.D. 1981. Calculating solar radiation
     %            ! for ecological studies. Ecological Modelling 14:1-19
-    % soltoa     ! Solar radiation on horizontal surface at top of atmosphere (W/m2)
+    % Rs_toa     ! Solar radiation on horizontal surface at top of atmosphere (W/m2)
     % tau_atm    ! Atmospheric transmission coefficient
     % oam        ! Optical air mass
     % soldir     ! Direct beam solar radiation on horizontal surface (W/m2)
     % soldif     ! Diffuse solar radiation on horizontal surface (W/m2)
     % solrad     ! Total solar radiation on horizontal surface (W/m2)
     
+    % Solar radiation at top of the atmosphere
+    %% 这里reback 如何？
+    % [Rs_toa, Rs, Rs_dir, Rs_dif, coszen] = cal_Rs_toa(lat, doy, hour);
+    % forcvar.solrad = Rs;                    % Total at surface
     % Solar radiation at top of the atmosphere
     decl = 23.45 * sin((284+doy)/365*2*pi) * pi/180;
     hour_angle = 15 * (hour-12) * pi/180;
@@ -187,7 +199,8 @@ for j = 1:nday
     
     ext = 0.5 / max(coszen, 0.0001);           % Light extinction coefficient
     fsun = (1 - exp(-ext*surfvar.LAI)) / (ext*surfvar.LAI);  % Sunlit fraction of canopy
-    if (soldir+soldif > 0)
+    
+    if (forcvar.solrad > 0)
       surfvar.gcan = (fsun * gcan_max + (1 - fsun) * gcan_min) * surfvar.LAI;
     else
       surfvar.gcan = gcan_min * surfvar.LAI;
@@ -197,7 +210,7 @@ for j = 1:nday
     [soilvar] = soil_thermal_properties (physcon, soilvar);
     
     % Calculate the soil temperatures and surface fluxes
-    [fluxvar, soilvar, bucket] = surface_fluxes (physcon, forcvar, surfvar, soilvar, fluxvar, bucket, dt);
+    [fluxvar, soilvar, bucket] = surface_fluxes(physcon, forcvar, surfvar, soilvar, fluxvar, bucket, dt);
     
     % Rainfall to equal evaporative loss (kg H2O/m2/s)
     %     forcvar.rain = fluxvar.etflx * physcon.mmh2o;
@@ -217,7 +230,6 @@ for j = 1:nday
     yustar(i) = fluxvar.ustar;
     ygac(i) = fluxvar.gac * 100;
     ygcan(i) = surfvar.gcan * 100;
-    
   end
 end
 
@@ -244,3 +256,5 @@ xlabel('Time of day (hours)')
 ylabel('Flux (W m^{-2})')
 legend('R_n','H','\lambdaE','G','g_{ac}*100','Location','northwest')
 grid on;
+
+saveas(gcf,'Figure7_Surface_Energy_Fluxes.png')

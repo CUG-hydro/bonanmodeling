@@ -37,7 +37,7 @@ function [fluxvar, fx] = rsl (physcon, forcvar, surfvar, fluxvar, x)
 
 % --- Prevent near-zero values of Obukhov length
 if (abs(x) <= 0.1)
-   x = 0.1;
+  x = 0.1;
 end
 
 % --- Determine beta_val = u* / u(h) for the current Obukhov length
@@ -49,39 +49,39 @@ beta_neutral = 0.35;
 LcL = surfvar.Lc/x;
 
 if (LcL <= 0)
-   % The unstable case is a quadratic equation for beta^2 at LcL
-   a = 1;
-   b = 16 * LcL * beta_neutral^4;
-   c = -beta_neutral^4;
-   beta_val = sqrt((-b + sqrt(b^2 - 4 * a * c)) / (2 * a));
-
-   % Error check
-   y = beta_val^2 * LcL;
-   fy = (1 - 16 * y)^(-0.25);
-   err = beta_val * fy - beta_neutral;
-   if (abs(err) > 1e-10)
-      error('unstable case: error in beta')
-   end
+  % The unstable case is a quadratic equation for beta^2 at LcL
+  a = 1;
+  b = 16 * LcL * beta_neutral^4;
+  c = -beta_neutral^4;
+  beta_val = sqrt((-b + sqrt(b^2 - 4 * a * c)) / (2 * a));
+  
+  % Error check
+  y = beta_val^2 * LcL;
+  fy = (1 - 16 * y)^(-0.25);
+  err = beta_val * fy - beta_neutral;
+  if (abs(err) > 1e-10)
+    error('unstable case: error in beta')
+  end
 else
-
-   % The stable case is a cubic equation for beta at LcL
-   a = 5 * LcL;
-   b = 0;
-   c = 1;
-   d = -beta_neutral;
-   q = (2*b^3 - 9*a*b*c + 27*(a^2)*d)^2 - 4*(b^2 - 3*a*c)^3;
-   q = sqrt(q);
-   r = 0.5 * (q + 2*b^3 - 9*a*b*c + 27*(a^2)*d);
-   r = r^(1/3);
-   beta_val = -(b+r)/(3*a) - (b^2 - 3*a*c)/(3*a*r);
-
-   % Error check
-   y = beta_val^2 * LcL;
-   fy = 1 + 5 * y;
-   err = beta_val * fy - beta_neutral;
-   if (abs(err) > 1e-10)
-      error('stable case: error in beta')
-   end
+  
+  % The stable case is a cubic equation for beta at LcL
+  a = 5 * LcL;
+  b = 0;
+  c = 1;
+  d = -beta_neutral;
+  q = (2*b^3 - 9*a*b*c + 27*(a^2)*d)^2 - 4*(b^2 - 3*a*c)^3;
+  q = sqrt(q);
+  r = 0.5 * (q + 2*b^3 - 9*a*b*c + 27*(a^2)*d);
+  r = r^(1/3);
+  beta_val = -(b+r)/(3*a) - (b^2 - 3*a*c)/(3*a*r);
+  
+  % Error check
+  y = beta_val^2 * LcL;
+  fy = 1 + 5 * y;
+  err = beta_val * fy - beta_neutral;
+  if (abs(err) > 1e-10)
+    error('stable case: error in beta')
+  end
 end
 
 % Place limits on beta
@@ -104,7 +104,7 @@ Prsc = 2.0;        % Scale of variation of Pr with stability
 
 Pr = Prn + Prvr * tanh(Prsc*surfvar.Lc/x);
 
-% --- The "f" parameter relates the length scale of the scalar (heat) to that of momentum 
+% --- The "f" parameter relates the length scale of the scalar (heat) to that of momentum
 f = (sqrt(1 + 4 * surfvar.rc * Pr) - 1) / 2;
 
 % --- Calculate the parameters c1 and c2 needed for the RSL function phi_hat
@@ -171,28 +171,27 @@ z0m = h_minus_d * exp(-physcon.vkc/beta_val) * exp(-psi_m_hc + psi_m_z0m) * exp(
 fb = z0m - bval;
 
 if (fa * fb > 0)
-   error('RSL bisection error: f(a) and f(b) do not have opposite signs')
+  error('RSL bisection error: f(a) and f(b) do not have opposite signs')
 end
 
 while (abs(bval-aval) > err)
-   cval = (aval + bval) / 2;
-
-   [psi_m_z0m] = psi_m_monin_obukhov (cval / x);
-   z0m = h_minus_d * exp(-physcon.vkc/beta_val) * exp(-psi_m_hc + psi_m_z0m) * exp(psi_m_rsl_hc);
-   fc = z0m - cval;
-
-   if (fa * fc < 0)
-      bval = cval; fb = fc;
-   else
-      aval = cval; fa = fc;
-   end
+  cval = (aval + bval) / 2;
+  
+  [psi_m_z0m] = psi_m_monin_obukhov (cval / x);
+  z0m = h_minus_d * exp(-physcon.vkc/beta_val) * exp(-psi_m_hc + psi_m_z0m) * exp(psi_m_rsl_hc);
+  fc = z0m - cval;
+  
+  if (fa * fc < 0)
+    bval = cval; fb = fc;
+  else
+    aval = cval; fa = fc;
+  end
 end
 
 fluxvar.z0m = cval;
 
 % z0c - Use bisection to find z0c, which lies between aval and bval, and refine the
 % estimate until the difference is less than err
-
 aval = surfvar.hc;
 bval = 0;
 
@@ -205,21 +204,21 @@ z0c = h_minus_d * exp(-physcon.vkc/beta_val*Pr/f) * exp(-psi_c_hc + psi_c_z0c) *
 fb = z0c - bval;
 
 if (fa * fb > 0)
-   error('RSL bisection error: f(a) and f(b) do not have opposite signs')
+  error('RSL bisection error: f(a) and f(b) do not have opposite signs')
 end
 
 while (abs(bval-aval) > err)
-   cval = (aval + bval) / 2;
-
-   [psi_c_z0c] = psi_c_monin_obukhov (cval / x);
-   z0c = h_minus_d * exp(-physcon.vkc/beta_val*Pr/f) * exp(-psi_c_hc + psi_c_z0c) * exp(psi_c_rsl_hc);
-   fc = z0c - cval;
-
-   if (fa * fc < 0)
-      bval = cval; fb = fc;
-   else
-      aval = cval; fa = fc;
-   end
+  cval = (aval + bval) / 2;
+  
+  [psi_c_z0c] = psi_c_monin_obukhov (cval / x);
+  z0c = h_minus_d * exp(-physcon.vkc/beta_val*Pr/f) * exp(-psi_c_hc + psi_c_z0c) * exp(psi_c_rsl_hc);
+  fc = z0c - cval;
+  
+  if (fa * fc < 0)
+    bval = cval; fb = fc;
+  else
+    aval = cval; fa = fc;
+  end
 end
 
 fluxvar.z0c = cval;

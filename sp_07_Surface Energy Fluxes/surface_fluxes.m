@@ -80,9 +80,9 @@ tol = 0.01;                        % Accuracy tolerance for Obukhov length (m)
 
 switch fluxvar.profiles
   case 'MOST'                     % Use Monin-Obukhov similarity theory
-    func_name = 'HydroTools.most';             % The function name is "most", in the file most.m
+    func_name = 'module_HydroTools.most';             % The function name is "most", in the file most.m
   case 'RSL'                      % Use canopy coupling with roughness sublayer theory
-    func_name = 'HydroTools.rsl';              % The function name is "rsl", in the file rsl.m
+    func_name = 'module_HydroTools.rsl';              % The function name is "rsl", in the file rsl.m
 end
 
 % Solve for the Obukhov length
