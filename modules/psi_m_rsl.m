@@ -1,5 +1,4 @@
 function [psi_hat_m] = psi_m_rsl (z, h, L, c1, c2)
-
 % --- Evaluate the roughness sublayer (RSL) function psi_hat for momentum
 % at z. Note that z has already been adjusted for the displacement height
 % (i.e., using z - d).
@@ -18,6 +17,7 @@ function [psi_hat_m] = psi_m_rsl (z, h, L, c1, c2)
 
 % The function to integrate depends on unstable (f1) or stable (f2)
 
+% Eq. 6.74, Eq. 
 f1 = @(x) (1-16*x/L).^(-0.25) .* (1 - (1 - c1*exp(-c2*x/(2*h)))) ./ x;
 f2 = @(x) (1+5*x/L)           .* (1 - (1 - c1*exp(-c2*x/(2*h)))) ./ x;
 

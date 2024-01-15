@@ -112,8 +112,8 @@ f = (sqrt(1 + 4 * surfvar.rc * Pr) - 1) / 2;
 % --- Calculate the parameters c1 and c2 needed for the RSL function phi_hat
 
 % Evaluate Monin-Obukhov phi functions at (hc-disp)/obu
-[phi_m_hc] = phi_m_monin_obukhov (h_minus_d / x);
-[phi_c_hc] = phi_c_monin_obukhov (h_minus_d / x);
+phi_m_hc = phi_m_monin_obukhov (h_minus_d / x);
+phi_c_hc = phi_c_monin_obukhov (h_minus_d / x);
 
 % Roughness sublayer depth scale multiplier (dimensionless)
 c2 = 0.5;

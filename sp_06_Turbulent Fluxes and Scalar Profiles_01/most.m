@@ -33,19 +33,19 @@ if (abs(x) <= 0.1)
 end
 
 % Evaluate psi for momentum at heights z2 and z1
-[psi_m_z2] = psi_m_monin_obukhov((var.z2-var.d)/x);
-[psi_m_z1] = psi_m_monin_obukhov((var.z1-var.d)/x);
+psi_m_z2 = psi_m_monin_obukhov((var.z2-var.d)/x);
+psi_m_z1 = psi_m_monin_obukhov((var.z1-var.d)/x);
 
 % Evaluate psi for scalars at heights z2 and z1
-[psi_c_z2] = psi_c_monin_obukhov((var.z2-var.d)/x);
-[psi_c_z1] = psi_c_monin_obukhov((var.z1-var.d)/x);
+psi_c_z2 = psi_c_monin_obukhov((var.z2-var.d)/x);
+psi_c_z1 = psi_c_monin_obukhov((var.z1-var.d)/x);
 
-% Calculate u* (m/s) and T* (K)
+% Calculate u* (m/s) and T* (K), Eq. 6.39, Eq. 6.41
 ustar = (var.u2 - var.u1) * var.k / (log((var.z2-var.d)/(var.z1-var.d)) - (psi_m_z2 - psi_m_z1));
 tstar = (var.t2 - var.t1) * var.k / (log((var.z2-var.d)/(var.z1-var.d)) - (psi_c_z2 - psi_c_z1));
 
 % Calculate L (m)
-L = ustar^2 * var.t2 / (var.k * var.g * tstar);
+L = ustar^2 * var.t2 / (var.k * var.g * tstar); % Eq. 31
 
 % Calculate change in L
 fx = x - L;

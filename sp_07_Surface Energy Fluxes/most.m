@@ -1,10 +1,11 @@
 function [fluxvar, fx] = most (x, varargin)
 % Use Monin-Obukhov similarity theory to obtain the Obukhov length (obu).
+% 
 % This is the function to solve for the Obukhov length. For the current
 % estimate of the Obukhov length (x), calculate u*, T*, and q* and then
 % the new length (obu). The function value is the change in Obukhov length:
 % fx = x - obu.
-
+% 
 % -------------------------------------------------------------------------
 % Input
 %   x                  ! Current estimate for Obukhov length (m)
@@ -38,10 +39,10 @@ if length(varargin) == 1 && iscell(varargin{1}); varargin = varargin{1}; end
 if (abs(x) <= 0.1); x = 0.1; end
 
 % --- Calculate z-d at the reference height, because this is used many times
-z_minus_d = forcvar.zref - fluxvar.disp;
+z_minus_d = forcvar.zref - fluxvar.disp; % z - d
 
 % --- Evaluate psi for momentum at the reference height (zref-disp) and surface (z0m)
-[psi_m_zref] = psi_m_monin_obukhov (z_minus_d / x);
+[psi_m_zref] = psi_m_monin_obukhov (z_minus_d / x); % x = L_{MO}
 [psi_m_z0m] = psi_m_monin_obukhov (fluxvar.z0m / x);
 psim = -psi_m_zref + psi_m_z0m;
 
@@ -64,4 +65,5 @@ fluxvar.obu = fluxvar.ustar^2 * forcvar.thvref / (physcon.vkc * physcon.grav * t
 
 % --- Calculate change in obu
 fx = x - fluxvar.obu;
+
 end

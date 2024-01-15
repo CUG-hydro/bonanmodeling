@@ -1,6 +1,6 @@
 function [psi_c] = psi_c_monin_obukhov (x)
-
-% --- Evaluate the Monin-Obukhov psi function for scalars at x
+% --- Evaluate the Monin-Obukhov ψ function for scalars at x
+% Eq. 6.47
 
 if (x < 0)
    y = (1 - 16 * x)^0.25;

@@ -37,21 +37,29 @@ if (abs(x) <= 0.1)
 end
 
 % Evaluate psi for momentum at heights z2 and z1
-[psi_m_z2] = psi_m_monin_obukhov((var.z2-var.d)/x);
-[psi_m_z1] = psi_m_monin_obukhov((var.z1-var.d)/x);
+psi_m_z2 = psi_m_monin_obukhov((var.z2-var.d)/x); % psi: Ψ, phi: φ
+psi_m_z1 = psi_m_monin_obukhov((var.z1-var.d)/x); 
 
 % Evaluate psi for scalars at heights z2 and z1
-[psi_c_z2] = psi_c_monin_obukhov((var.z2-var.d)/x);
-[psi_c_z1] = psi_c_monin_obukhov((var.z1-var.d)/x);
+psi_c_z2 = psi_c_monin_obukhov((var.z2-var.d)/x);
+psi_c_z1 = psi_c_monin_obukhov((var.z1-var.d)/x);
 
-% Evaluate the roughness sublayer-modified psi (between z1 and z2)
 
-f1_psi_m_rsl = @(z) (1-16*(z-var.d)/x).^(-0.25) .* (1-exp(-0.7*(1-(z-var.d)/(var.zstar-var.d)))) ./ (z-var.d);
-f1_psi_c_rsl = @(z) (1-16*(z-var.d)/x).^(-0.50) .* (1-exp(-0.7*(1-(z-var.d)/(var.zstar-var.d)))) ./ (z-var.d);
+% Eq. 6.37 - 6.38, phi: φ
+phi_m1 = @(z) (1-16*(z-var.d)/x).^(-0.25);
+phi_m2 = @(z) (1+5*(z-var.d)/x);
 
-f2_psi_m_rsl = @(z) (1+5*(z-var.d)/x) .* (1-exp(-0.7*(1-(z-var.d)/(var.zstar-var.d)))) ./ (z-var.d);
-f2_psi_c_rsl = @(z) (1+5*(z-var.d)/x) .* (1-exp(-0.7*(1-(z-var.d)/(var.zstar-var.d)))) ./ (z-var.d);
+phi_c1 = @(z) (1-16*(z-var.d)/x).^(-0.50);
+phi_c2 = phi_m2;
 
+% Evaluate the roughness sublayer-modified psi (between z1 and z2), Eq. 6.74
+f1_psi_m_rsl = @(z) phi_m1(z) .* (1-exp(-0.7*(1-(z-var.d)/(var.zstar-var.d)))) ./ (z-var.d);
+f1_psi_c_rsl = @(z) phi_c1(z) .* (1-exp(-0.7*(1-(z-var.d)/(var.zstar-var.d)))) ./ (z-var.d);
+
+f2_psi_m_rsl = @(z) phi_m2(z) .* (1-exp(-0.7*(1-(z-var.d)/(var.zstar-var.d)))) ./ (z-var.d);
+f2_psi_c_rsl = @(z) phi_c2(z) .* (1-exp(-0.7*(1-(z-var.d)/(var.zstar-var.d)))) ./ (z-var.d);
+
+% Eq. 6.74, Ψ_hat
 if (x < 0)
    psi_m_rsl = integral (f1_psi_m_rsl, var.z1, var.z2);
    psi_c_rsl = integral (f1_psi_c_rsl, var.z1, var.z2);
@@ -60,12 +68,12 @@ else
    psi_c_rsl = integral (f2_psi_c_rsl, var.z1, var.z2);
 end
 
-% Calculate u* (m/s) and T* (K)
+% Calculate u* (m/s) and T* (K), Eq. 6.71
 ustar = (var.u2 - var.u1) * var.k / (log((var.z2-var.d)/(var.z1-var.d)) - (psi_m_z2 - psi_m_z1) - psi_m_rsl);
 tstar = (var.t2 - var.t1) * var.k / (log((var.z2-var.d)/(var.z1-var.d)) - (psi_c_z2 - psi_c_z1) - psi_c_rsl);
 
 % Calculate L (m)
-L = ustar^2 * var.t2 / (var.k * var.g * tstar);
+L = ustar^2 * var.t2 / (var.k * var.g * tstar); % Eq. 6.31
 
 % Calculate change in L
 fx = x - L;

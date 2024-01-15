@@ -1,6 +1,6 @@
 function [psi_m] = psi_m_monin_obukhov (x)
-
-% --- Evaluate the Monin-Obukhov psi function for momentum at x
+% --- Evaluate the Monin-Obukhov ψ function for momentum at x
+% Eq. 6.46
 
 if (x < 0)
    y = (1 - 16 * x)^0.25;
