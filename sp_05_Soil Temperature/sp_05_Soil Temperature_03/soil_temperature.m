@@ -76,65 +76,64 @@ end
 
 % --- Set up tridiagonal matrix
 % Top soil layer with tsurf as boundary condition
-i = 1;
-m = soilvar.cv(i) * soilvar.dz(i) / dt;
 
-switch solution
-  case 'implicit'
-    a(i) = 0;
-    c(i) = -tk_plus_onehalf(i) / dz_plus_onehalf(i);
-    b(i) = m - c(i) + tk(i) / (0 - z(i));
-    d(i) = m * tsoi0(i) + tk(i) / (0 - z(i)) * tsurf;
-    
-  case 'Crank-Nicolson'
-    % --- Heat flux at time n (W/m2)
-    f = zeros(1, nsoi);
-    for i = 1:soilvar.nsoi-1
-      f(i) = -tk_plus_onehalf(i) * (tsoi0(i) - tsoi0(i+1)) / dz_plus_onehalf(i);
-    end
-    f(soilvar.nsoi) = 0;
-    
-    a(i) = 0;
-    c(i) = -0.5 * tk_plus_onehalf(i) / dz_plus_onehalf(i);
-    b(i) = m - c(i) + soilvar.tk(i) / (0 - soilvar.z(i));
-    d(i) = m * tsoi0(i) + 0.5 * f(i) + soilvar.tk(i) / (0 - soilvar.z(i)) * tsurf;
-end
-
-% Layers 2 to nsoi-1
-switch solution
-  case 'Crank-Nicolson'
-    for i = 2:soilvar.nsoi-1
-      m = soilvar.cv(i) * soilvar.dz(i) / dt;
-      a(i) = -0.5 * tk_plus_onehalf(i-1) / dz_plus_onehalf(i-1);
-      c(i) = -0.5 * tk_plus_onehalf(i) / dz_plus_onehalf(i);
-      b(i) = m - a(i) - c(i);
-      d(i) = m * tsoi0(i) + 0.5 * (f(i) - f(i-1));
-    end
-  case 'implicit'
-    for i = 2:soilvar.nsoi-1
-      m = soilvar.cv(i) * soilvar.dz(i) / dt;
+if solution == "implicit"
+  i = 1;
+  m = soilvar.cv(i) * soilvar.dz(i) / dt;
+  
+  for i = 1:soilvar.nsoi
+    m = soilvar.cv(i) * soilvar.dz(i) / dt;
+    if i == 1
+      a(i) = 0;
+      c(i) = -tk_plus_onehalf(i) / dz_plus_onehalf(i);
+      b(i) = m - c(i) + tk(i) / (0 - z(i));
+      d(i) = m * tsoi0(i) + tk(i) / (0 - z(i)) * tsurf;
+      
+    elseif i < nsoi
       a(i) = -tk_plus_onehalf(i-1) / dz_plus_onehalf(i-1);
       c(i) = -tk_plus_onehalf(i) / dz_plus_onehalf(i);
       b(i) = m - a(i) - c(i);
       d(i) = m * tsoi0(i);
+      
+    elseif i == nsoi
+      a(i) = -tk_plus_onehalf(i-1) / dz_plus_onehalf(i-1);
+      c(i) = 0;
+      b(i) = m - a(i);
+      d(i) = m * tsoi0(i);
     end
-end
-
-% Bottom soil layer with zero heat flux
-i = soilvar.nsoi;
-m = soilvar.cv(i) * soilvar.dz(i) / dt;
-
-switch solution
-  case 'Crank-Nicolson'
-    a(i) = -0.5 * tk_plus_onehalf(i-1) / dz_plus_onehalf(i-1);
-    c(i) = 0;
-    b(i) = m - a(i);
-    d(i) = m * tsoi0(i) - 0.5 * f(i-1);
-  case 'implicit'
-    a(i) = -tk_plus_onehalf(i-1) / dz_plus_onehalf(i-1);
-    c(i) = 0;
-    b(i) = m - a(i);
-    d(i) = m * tsoi0(i);  
+  end
+  
+elseif solution == "Crank-Nicolson"
+  
+  % --- Heat flux at time n (W/m2)
+  f = zeros(1, nsoi);
+  for i = 1:soilvar.nsoi-1
+    f(i) = -tk_plus_onehalf(i) * (tsoi0(i) - tsoi0(i+1)) / dz_plus_onehalf(i);
+  end
+  % f(soilvar.nsoi) = 0;
+  for i = 1:nsoi
+    m = soilvar.cv(i) * soilvar.dz(i) / dt;
+    if i == 1
+      a(i) = 0;
+      c(i) = -0.5 * tk_plus_onehalf(i) / dz_plus_onehalf(i);
+      b(i) = m - c(i) + soilvar.tk(i) / (0 - soilvar.z(i));
+      d(i) = m * tsoi0(i) + 0.5 * f(i) + soilvar.tk(i) / (0 - soilvar.z(i)) * tsurf;
+      
+    elseif i < nsoi
+      a(i) = -0.5 * tk_plus_onehalf(i-1) / dz_plus_onehalf(i-1);
+      c(i) = -0.5 * tk_plus_onehalf(i) / dz_plus_onehalf(i);
+      b(i) = m - a(i) - c(i);
+      d(i) = m * tsoi0(i) + 0.5 * (f(i) - f(i-1));
+      
+    elseif i == nsoi
+      a(i) = -0.5 * tk_plus_onehalf(i-1) / dz_plus_onehalf(i-1);
+      c(i) = 0;
+      b(i) = m - a(i);
+      d(i) = m * tsoi0(i) - 0.5 * f(i-1);
+    end
+  end
+  
+  
 end
 
 % --- Solve for soil temperature
