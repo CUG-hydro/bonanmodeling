@@ -14,24 +14,12 @@ vkc = 0.4;
 
 %rc = 0.1;
 rc = 0.2;
-
-% Leaf drag coefficient
-cd = 0.25;
-
-% Canopy height (m)
-hc = 20;
-
-% Leaf area index (m2/m2)
-LAI = 5;
-
-% Leaf area density
-lad = LAI / hc;
-
-% Canopy density length scale (m)
-Lc = 1 / (cd * lad);
-
-% Obukhov length (m)
-obu = -1000;
+cd  = 0.25;           % Leaf drag coefficient
+hc  = 20;             % Canopy height (m)
+LAI = 5;              % Leaf area index (m2/m2)
+lad = LAI / hc;       % Leaf area density
+Lc  = 1 / (cd * lad); % Canopy density length scale (m)
+obu = -1000;          % Obukhov length (m)
 
 % --- Determine beta_val = u* / u(h) for the current Obukhov length
 % Neutral value for beta = u* / u(h)

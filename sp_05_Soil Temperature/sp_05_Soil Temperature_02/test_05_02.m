@@ -59,8 +59,7 @@ dt = 1800;      % Time step (seconds), 0.5hour
 ntim = round(86400/dt);
 
 itim = 1;
-% Hour of day
-hour = itim * (dt/86400 * 24);
+hour = itim * (dt/86400 * 24); % Hour of day
 
 % Surface temperature: Constant value TMEAN if TRANGE = 0. Otherwise, use a sine
 % wave with max (TMEAN + 1/2 TRANGE) at 2 pm and min (TMEAN - 1/2 TRANGE) at 2 am
