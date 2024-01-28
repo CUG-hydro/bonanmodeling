@@ -19,6 +19,9 @@ dt = 3600;                         % Time step (seconds)
 nday = 60;                         % Number of days
 %soilvar.method = 'excess-heat';            % Use excess heat for phase change
 soilvar.method = 'apparent-heat-capacity'; % Use apparent heat capacity for phase change
+soilvar.solution = "implicit";
+% soilvar.solution = "Crank-Nicolson";
+
 
 % --- Initialize soil layer variables
 
