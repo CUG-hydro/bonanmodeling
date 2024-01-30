@@ -38,7 +38,7 @@ function [soilvar, fluxvar, bucket] = soil_temperature (physcon, soilvar, fluxva
 %   df0                     ! Temperature derivative of f0 (W/m2/K)
 %   physcon.hfus            ! Heat of fusion for water at 0 C (J/kg)
 %   physcon.tfrz            ! Freezing point of water (K)
-%   soilvar.n            ! Number of soil layers
+%   soilvar.nsoi            ! Number of soil layers
 %   soilvar.z               ! Soil depth (m)
 %   soilvar.z_plus_onehalf  ! Soil depth (m) at i+1/2 interface between layers i and i+1
 %   soilvar.dz              ! Soil layer thickness (m)
@@ -69,7 +69,7 @@ dz = soilvar.dz;
 
 % --- Thermal conductivity at interface (W/m/K)
 tk_plus_onehalf = zeros(1, n-1);
-for i = 1:soilvar.n-1
+for i = 1:n-1
   tk_plus_onehalf(i) = tk(i) * tk(i+1) * (z(i)-z(i+1)) / ...
     (tk(i)*(z_plus_onehalf(i)-z(i+1)) + tk(i+1)*(z(i) - z_plus_onehalf(i))); % Eq. 5.16
 end
@@ -84,7 +84,7 @@ for i = 1:n
   if i == 1
     a(i) = 0;
     c(i) = -tk_plus_onehalf(i) / dz_plus_onehalf(i);
-    b(i) = cv(i) * dz(i) / dt - c(i) - df0;
+    b(i) = cv(i) * dz(i) / dt - c(i) - df0; % 
     d(i) = -tk_plus_onehalf(i) * (tsoi0(i) - tsoi0(i+1)) / dz_plus_onehalf(i) + f0;
     
   elseif i < n
@@ -93,12 +93,14 @@ for i = 1:n
     b(i) = cv(i) * dz(i) / dt - a(i) - c(i);
     d(i) = tk_plus_onehalf(i-1) * (tsoi0(i-1) - tsoi0(i)) / dz_plus_onehalf(i-1) ...
       - tk_plus_onehalf(i) * (tsoi0(i) - tsoi0(i+1)) / dz_plus_onehalf(i);
+    
   elseif i == n
     a(i) = -tk_plus_onehalf(i-1) / dz_plus_onehalf(i-1);
     c(i) = 0;
     b(i) = cv(i) * dz(i) / dt - a(i);
     d(i) = tk_plus_onehalf(i-1) * (tsoi0(i-1) - tsoi0(i)) / dz_plus_onehalf(i-1);    
   end
+  
 end
 
 %% --- Begin tridiagonal solution: forward sweep for layers N to 1
@@ -141,7 +143,7 @@ soilvar.tsoi(i) = soilvar.tsoi(i) + (num - fluxvar.gsno) / den;
 dtsoi(i) = soilvar.tsoi(i) - tsoi0(i);
 
 % --- Now complete the tridiagonal solution for layers 2 to N
-for i = 2:soilvar.n
+for i = 2:n
   dtsoi(i) = f(i) - e(i) * dtsoi(i-1);
   soilvar.tsoi(i) = soilvar.tsoi(i) + dtsoi(i);
 end
