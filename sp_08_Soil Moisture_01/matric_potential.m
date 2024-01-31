@@ -1,7 +1,6 @@
 function [psi] = matric_potential (type, params, theta)
 
 % --- Calculate psi for a given theta
-
 switch type
   case 'van_Genuchten'
     
