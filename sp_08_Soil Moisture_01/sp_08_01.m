@@ -111,7 +111,7 @@ for itim = 1:ntim
   fprintf('hour = %8.3f \n',hour)
   
   % Calculate soil moisture
-  [soil] = predictor_corrector (soil, params, dt);
+  soil = predictor_corrector (soil, params, dt);
   
   % Sum fluxes for relative mass balance error
   sum_in = sum_in + abs(soil.Q0) * dt;

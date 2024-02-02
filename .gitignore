@@ -1,3 +1,5 @@
 *.pdf
 # *.txt
 sp*/*.png
+
+*.jl
