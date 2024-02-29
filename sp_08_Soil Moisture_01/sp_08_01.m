@@ -1,8 +1,10 @@
+clear, clc
 % ---------------------------------------------------------------------
 % Use the predictor-corrector method to solve the Richards equation for
 % infiltration with surface soil moisture as the boundary condition.
 % ---------------------------------------------------------------------
 
+tic
 % Number of soil layers
 n = 150;
 dz = ones(n, 1);
@@ -100,13 +102,12 @@ if (ityp == 2)
 end
 
 % --- Initialize accumulators for water balance check
-
 sum_in = 0;
 sum_out = 0;
 sum_store = 0;
 
 % --- Time stepping loop: NTIM iterations with a time step of DT seconds
-for itim = 1:ntim  
+for itim = 1:ntim
   hour = itim * (dt/86400 * 24);
   fprintf('hour = %8.3f \n',hour)
   
@@ -122,6 +123,7 @@ for itim = 1:ntim
   xout(itim) = hour;
   yout(itim) = sum_in;
 end
+toc
 
 % --- Print mass balance
 fprintf('infiltration (cm) = %8.3f \n',sum_in)

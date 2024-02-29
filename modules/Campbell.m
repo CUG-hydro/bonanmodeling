@@ -10,7 +10,6 @@ b = params(3);            % Exponent
 Ksat = params(4);         % Hydraulic conductivity at saturation
 
 % --- Volumetric soil moisture (theta) for specified matric potential (psi)
-
 if (psi <= psi_sat)
   theta = theta_sat * (psi / psi_sat)^(-1/b);
 else

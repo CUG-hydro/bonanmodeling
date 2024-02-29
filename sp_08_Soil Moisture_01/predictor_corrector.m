@@ -25,13 +25,9 @@ function [soil] = predictor_corrector (soil, params, dt)
 
 % --- Save current soil moisture and matric potential for time n
 n = soil.nsoi;
-theta_n = zeros(n,1);
-psi_n   = zeros(n,1);
 
-for i = 1:n
-  theta_n(i) = soil.theta(i);
-  psi_n(i) = soil.psi(i);
-end
+theta_n = soil.theta; 
+psi_n = soil.psi;
 
 %% --- Predictor step using implict solution for time n+1/2
 % Hydraulic properties for current psi:
@@ -80,7 +76,8 @@ b(i) = soil.cap(i) * soil.dz(i) / (0.5 * dt) - a(i) - c(i);
 d(i) = soil.cap(i) * soil.dz(i) / (0.5 * dt) * soil.psi(i) + K_plus_onehalf(i-1) - soil.K(i);
 
 % Solve for psi at n+1/2
-psi_pred = tridiagonal_solver (a, b, c, d, n);
+psi_pred = tridiagonal_solver(a, b, c, d, n);
+
 
 %% --- Corrector step using Crank-Nicolson solution for time n+1
 % Hydraulic properties for psi_pred
@@ -100,9 +97,6 @@ end
 
 % Hydraulic conductivity at i=1/2 between surface (i=0) and first layer i=1
 K_onehalf = soil.K(1);
-
-% dz at i=1/2 between surface (i=0) and first layer i=1
-dz_onehalf = 0.5 * soil.dz(1);
 
 % Terms for tridiagonal matrix
 i = 1;
