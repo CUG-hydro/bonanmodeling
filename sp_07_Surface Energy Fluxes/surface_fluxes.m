@@ -88,7 +88,7 @@ end
 % Solve for the Obukhov length
 % Ta_pot = forcvar.thref; % ! Potential temperature at reference height (K)
 % Ta     = fluxvar.tsrf;  % ! Surface temperature (K)
-[fluxvar, ~] = root_hybrid(func_name, obu0, obu1, tol, ...
+[fluxvar, obu] = root_hybrid(func_name, obu0, obu1, tol, ...
   physcon, forcvar, surfvar, fluxvar); % oburoot
 
 % Uncomment this line to use MOST or RSL for neutral conditions
@@ -110,7 +110,7 @@ tsoi0 = soilvar.tsoi;
 
 % Saturation vapor pressure (Pa) and temperature derivative (Pa/K)
 K0 = physcon.tfrz;
-[esat, desat] = satvap (fluxvar.tsrf - K0);
+[esat, desat] = satvap (fluxvar.tsrf - K0); % 湿表面温度，或者地表温度
 
 % Latent heat of vaporization or sublimation (J/mol)
 if (bucket.snow_water > 0)

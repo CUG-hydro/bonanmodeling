@@ -3,11 +3,6 @@ classdef module_Radiation
   %
   %% Example:
   % import module_Radiation.*
-  
-  properties (Constant)
-    solcon = 1364; % W/m2
-  end
-  
   properties
   end
   
